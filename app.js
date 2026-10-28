@@ -299,7 +299,60 @@ function openMediaModal() {
     return;
   }
   $('#mediaForm').reset();
+  $('#mediaUrlStatus').textContent = '';
+  $('#mediaForm [name="title"]').dataset.manual = 'false';
   openModal('media');
+}
+
+function getYouTubeUrl(value) {
+  try {
+    const url = new URL(value.trim());
+    const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
+    if (hostname === 'youtu.be') return `https://www.youtube.com/watch?v=${url.pathname.slice(1)}`;
+    if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+      const videoId = url.searchParams.get('v');
+      if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+    }
+  } catch {
+    return '';
+  }
+  return '';
+}
+
+let titleLookupTimer;
+let titleLookupRequest = 0;
+
+async function lookupVideoTitle() {
+  const form = $('#mediaForm');
+  const urlInput = form.elements.url;
+  const titleInput = form.elements.title;
+  const status = $('#mediaUrlStatus');
+  const youtubeUrl = getYouTubeUrl(urlInput.value);
+  if (!youtubeUrl) {
+    status.textContent = urlInput.value.trim() ? '目前只會自動讀取 YouTube 影片標題，其他影音可手動輸入。' : '';
+    return;
+  }
+  const request = ++titleLookupRequest;
+  status.textContent = '正在讀取影片標題…';
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`);
+    if (!response.ok) throw new Error('title lookup failed');
+    const data = await response.json();
+    if (request !== titleLookupRequest) return;
+    if (!titleInput.value.trim() || titleInput.dataset.manual !== 'true') {
+      titleInput.dataset.filling = 'true';
+      titleInput.value = data.title || '';
+      titleInput.dataset.filling = 'false';
+    }
+    status.textContent = data.title ? '已自動帶入 YouTube 影片標題，可再自行修改。' : '找不到影片標題，請手動輸入。';
+  } catch {
+    if (request === titleLookupRequest) status.textContent = '無法自動取得影片標題，請手動輸入。';
+  }
+}
+
+function scheduleVideoTitleLookup() {
+  clearTimeout(titleLookupTimer);
+  titleLookupTimer = setTimeout(lookupVideoTitle, 450);
 }
 
 async function handleMediaSubmit(event) {
@@ -353,6 +406,11 @@ function wireEvents() {
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
+  $('#mediaForm [name="url"]').addEventListener('input', scheduleVideoTitleLookup);
+  $('#mediaForm [name="url"]').addEventListener('blur', lookupVideoTitle);
+  $('#mediaForm [name="title"]').addEventListener('input', (event) => {
+    if (event.target.dataset.filling !== 'true') event.target.dataset.manual = 'true';
+  });
   $('#mediaForm').addEventListener('submit', handleMediaSubmit);
   $('#typeForm').addEventListener('submit', handleTypeSubmit);
   $$('[data-close-modal]').forEach((button) => button.addEventListener('click', closeModal));
