@@ -27,7 +27,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .app-shell { width: min(1180px, calc(100% - 56px)); margin: 0 auto; }
 .topbar { min-height: 86px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); }
 .brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
-.brand-mark { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 50%; color: #fff; background: var(--sage-deep); font-family: "Noto Serif TC", serif; font-weight: 700; font-size: 18px; }
+.brand-mark { display: block; flex: 0 0 auto; width: 48px; height: 49px; object-fit: contain; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
 .brand-text strong { font-family: "Noto Serif TC", serif; font-size: 19px; letter-spacing: 0.06em; }
 .eyebrow { margin: 0 0 9px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.18em; }
@@ -144,6 +144,7 @@ code { padding: 2px 4px; color: var(--sage-deep); background: var(--sage); font-
 }
 
 @media (max-width: 460px) {
+  .brand-mark { width: 42px; height: 43px; }
   .brand-text .eyebrow { display: none; }
   .brand-text strong { font-size: 17px; }
   .admin-name { display: none; }
