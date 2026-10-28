@@ -63,6 +63,14 @@ function formatDate(value) {
   return new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
 }
 
+function timestampValue(value) {
+  const raw = String(value || '').trim();
+  const timestamp = Date.parse(raw.includes('T') ? raw : raw.replace(/^(\d{4}-\d{2}-\d{2})\s+/, '$1T'));
+  if (Number.isFinite(timestamp)) return timestamp;
+  const dateOnly = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  return dateOnly ? Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])) : 0;
+}
+
 function isHttpsUrl(value) {
   try {
     return new URL(value).protocol === 'https:';
@@ -93,7 +101,7 @@ function renderMedia() {
     const inType = state.type === 'all' || item.type === state.type;
     const haystack = `${item.title} ${item.description} ${item.type}`.toLowerCase();
     return inType && (!query || haystack.includes(query));
-  });
+  }).sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
   $('#collectionCount').textContent = `${state.filteredMedia.length} 部影音`;
   const grid = $('#mediaGrid');
   if (!state.filteredMedia.length) {
