@@ -1,358 +1,365 @@
-const STORAGE_KEY = 'mediavault-items-v1';
-const SETTINGS_KEY = 'mediavault-settings-v1';
-
-const TYPES = ['影片', 'Podcast', '音樂', '直播', '文章／其他'];
-const STATUSES = [
-  { value: '待觀看', className: 'pending' },
-  { value: '觀看中', className: 'watching' },
-  { value: '已完成', className: 'done' },
-  { value: '封存', className: 'archived' }
-];
-const CATEGORIES = ['設計靈感', '工作方法', '城市與旅行', '音樂現場', '生活觀察'];
-const FIELD_DEFINITIONS = [
-  ['id', '唯一識別碼'], ['title', '影音標題'], ['mediaType', '影音類型'], ['sourceUrl', '來源連結'],
-  ['thumbnailUrl', '縮圖網址'], ['category', '主要分類'], ['tags', '逗號分隔標籤'], ['status', '觀看狀態'],
-  ['rating', '0–5 評分'], ['notes', '個人備註'], ['createdAt', '建立時間'], ['updatedAt', '更新時間']
+const DEMO_TYPES = [
+  { id: 'type-1', name: '主日講道' },
+  { id: 'type-2', name: '查經分享' },
+  { id: 'type-3', name: '信仰見證' }
 ];
 
-const seedItems = [
-  { id: 'mv-001', title: 'The art of noticing', mediaType: '影片', sourceUrl: 'https://www.youtube.com/watch?v=demo1', thumbnailUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80', category: '設計靈感', tags: '觀察,創意', status: '待觀看', rating: 4.5, notes: '留意講者怎麼把日常物件轉成靈感索引。', createdAt: '2026-10-21T08:20:00+08:00', updatedAt: '2026-10-25T12:10:00+08:00' },
-  { id: 'mv-002', title: '一座城市的聲音地圖', mediaType: 'Podcast', sourceUrl: 'https://example.com/podcast-city', thumbnailUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=900&q=80', category: '城市與旅行', tags: '城市,聲音', status: '觀看中', rating: 4, notes: '第 3 集提到的市場聲景很想再找來聽。', createdAt: '2026-10-18T09:00:00+08:00', updatedAt: '2026-10-24T16:48:00+08:00' },
-  { id: 'mv-003', title: 'How to build a second brain', mediaType: '影片', sourceUrl: 'https://www.youtube.com/watch?v=demo3', thumbnailUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=900&q=80', category: '工作方法', tags: '知識管理,工作流', status: '已完成', rating: 5, notes: '想把這套標籤方法套用到自己的素材庫。', createdAt: '2026-10-15T11:30:00+08:00', updatedAt: '2026-10-22T10:15:00+08:00' },
-  { id: 'mv-004', title: 'Live at the Blue Note', mediaType: '音樂', sourceUrl: 'https://example.com/live-blue-note', thumbnailUrl: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=900&q=80', category: '音樂現場', tags: '爵士,現場', status: '待觀看', rating: 4.5, notes: '適合週末整理房間時播放。', createdAt: '2026-10-12T13:20:00+08:00', updatedAt: '2026-10-20T18:05:00+08:00' },
-  { id: 'mv-005', title: '慢慢走，台北的雨', mediaType: '影片', sourceUrl: 'https://example.com/taipei-rain', thumbnailUrl: 'https://images.unsplash.com/photo-1501691223387-dd0500403074?auto=format&fit=crop&w=900&q=80', category: '生活觀察', tags: '台北,散步', status: '已完成', rating: 4, notes: '畫面色調很舒服，可以作為攝影參考。', createdAt: '2026-10-11T07:10:00+08:00', updatedAt: '2026-10-19T09:40:00+08:00' },
-  { id: 'mv-006', title: 'The long game of craft', mediaType: 'Podcast', sourceUrl: 'https://example.com/long-game', thumbnailUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=900&q=80', category: '工作方法', tags: '創作,專注', status: '待觀看', rating: 4.5, notes: '記下「每天留一點空白」這句話。', createdAt: '2026-10-08T17:20:00+08:00', updatedAt: '2026-10-18T11:32:00+08:00' },
-  { id: 'mv-007', title: 'Patterns in public space', mediaType: '文章／其他', sourceUrl: 'https://example.com/public-space', thumbnailUrl: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80', category: '設計靈感', tags: '空間,建築', status: '觀看中', rating: 3.5, notes: '想整理成「城市觀察」的長期資料夾。', createdAt: '2026-10-04T12:00:00+08:00', updatedAt: '2026-10-17T14:27:00+08:00' },
-  { id: 'mv-008', title: 'The quiet kitchen', mediaType: '影片', sourceUrl: 'https://www.youtube.com/watch?v=demo8', thumbnailUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=80', category: '生活觀察', tags: '料理,日常', status: '封存', rating: 3, notes: '先封存，等想研究食物影像時再回來。', createdAt: '2026-09-29T15:12:00+08:00', updatedAt: '2026-10-12T08:50:00+08:00' }
+const DEMO_MEDIA = [
+  { id: 'demo-1', title: '在盼望中持守信仰', url: 'https://www.youtube.com/results?search_query=在盼望中持守信仰', type: '主日講道', description: '從聖經的信息重新看見盼望，學習在日常生活裡持守所信的道路。', createdAt: '2026-10-24', createdBy: '示範資料' },
+  { id: 'demo-2', title: '約翰福音：光照在黑暗裡', url: 'https://www.youtube.com/results?search_query=約翰福音+光照在黑暗裡', type: '查經分享', description: '一起讀約翰福音開頭的經文，思想光、生命與真理之間的關係。', createdAt: '2026-10-20', createdBy: '示範資料' },
+  { id: 'demo-3', title: '一段重新學會禱告的見證', url: 'https://www.youtube.com/results?search_query=重新學會禱告+信仰見證', type: '信仰見證', description: '在看似安靜的時候，如何重新回到禱告與信靠的起點。', createdAt: '2026-10-16', createdBy: '示範資料' },
+  { id: 'demo-4', title: '聽見真理，也活出真理', url: 'https://www.youtube.com/results?search_query=聽見真理+活出真理+講道', type: '主日講道', description: '真理不只停留在理解，也邀請我們用選擇與行動回應。', createdAt: '2026-10-09', createdBy: '示範資料' }
 ];
 
+const CONFIG_KEY = 'bible-truth-config';
+const DEFAULT_CONFIG = {
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
+  googleClientId: '736171088462-ias9uqmm9j7crschd80ddj0je2mf8a2k.apps.googleusercontent.com'
+};
 const state = {
-  items: [],
-  filteredItems: [],
-  selectedItem: null,
-  editing: false,
-  filters: { type: '', status: '', rating: 0, category: '', tag: '' },
-  query: '',
-  sort: 'updated',
-  settings: { mode: 'demo', apiUrl: '' }
+  media: [...DEMO_MEDIA],
+  types: [...DEMO_TYPES],
+  filteredMedia: [],
+  config: loadConfig(),
+  isLive: false,
+  isAdmin: false,
+  user: null,
+  credential: null,
+  modal: null,
+  search: '',
+  type: 'all',
+  toastTimer: null
 };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
-function escapeHtml(value = '') {
-  return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
-}
-
-function getSettings() {
-  try { return { ...state.settings, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; } catch { return state.settings; }
-}
-
-function saveLocalItems(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
-function loadLocalItems() {
+function loadConfig() {
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (Array.isArray(stored)) return stored;
-  } catch { /* use seed */ }
-  saveLocalItems(seedItems);
-  return [...seedItems];
+    return { ...DEFAULT_CONFIG, ...JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}') };
+  } catch {
+    return { ...DEFAULT_CONFIG };
+  }
 }
 
-const dataSource = {
-  async list() {
-    if (state.settings.mode === 'demo') return loadLocalItems();
-    if (!state.settings.apiUrl) throw new Error('請先在「資料來源」設定 Apps Script Web App URL。');
-    const params = new URLSearchParams({ action: 'list' });
-    if (state.query) params.set('q', state.query);
-    if (state.filters.status) params.set('status', state.filters.status);
-    if (state.filters.type) params.set('mediaType', state.filters.type);
-    if (state.filters.category) params.set('category', state.filters.category);
-    if (state.sort) params.set('sort', state.sort);
-    const response = await fetch(`${state.settings.apiUrl}?${params.toString()}`, { headers: { Accept: 'application/json' } });
-    const payload = await response.json();
-    if (!payload.ok) throw new Error(payload.error?.message || 'API 回應失敗。');
-    return Array.isArray(payload.data) ? payload.data : [];
-  },
-  async mutate(action, item, id) {
-    if (state.settings.mode === 'demo') {
-      let items = loadLocalItems();
-      if (action === 'create') items = [item, ...items];
-      if (action === 'update') items = items.map((entry) => entry.id === id ? item : entry);
-      if (action === 'delete') items = items.filter((entry) => entry.id !== id);
-      saveLocalItems(items);
-      return item;
+function saveConfig() {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({
+    appsScriptUrl: (state.config.appsScriptUrl || '').trim(),
+    googleClientId: (state.config.googleClientId || '').trim()
+  }));
+}
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+}
+
+function formatDate(value) {
+  if (!value) return '尚未標記日期';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return escapeHtml(value);
+  return new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+}
+
+function isHttpsUrl(value) {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function setConnectionState(live) {
+  const el = $('#connectionState');
+  el.classList.toggle('connected', live);
+  el.innerHTML = `<span class="status-dot"></span>${live ? '已連線 Google 試算表' : '示範資料'}`;
+  $('#demoNotice').hidden = live;
+}
+
+function renderTypeOptions() {
+  const options = [`<option value="all">全部類型</option>`, ...state.types.map((type) => `<option value="${escapeHtml(type.name)}">${escapeHtml(type.name)}</option>`)];
+  const filter = $('#typeFilter');
+  filter.innerHTML = options.join('');
+  filter.value = state.types.some((type) => type.name === state.type) ? state.type : 'all';
+  const mediaType = $('#mediaTypeInput');
+  mediaType.innerHTML = state.types.length ? state.types.map((type) => `<option value="${escapeHtml(type.name)}">${escapeHtml(type.name)}</option>`).join('') : '<option value="">請先新增影音類型</option>';
+}
+
+function renderMedia() {
+  const query = state.search.trim().toLowerCase();
+  state.filteredMedia = state.media.filter((item) => {
+    const inType = state.type === 'all' || item.type === state.type;
+    const haystack = `${item.title} ${item.description} ${item.type}`.toLowerCase();
+    return inType && (!query || haystack.includes(query));
+  });
+  $('#collectionCount').textContent = `${state.filteredMedia.length} 部影音`;
+  const grid = $('#mediaGrid');
+  if (!state.filteredMedia.length) {
+    grid.innerHTML = `<div class="empty-state"><strong>還沒有符合條件的影音</strong><span>${state.media.length ? '換個搜尋字詞或清除影音類型篩選。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
+    return;
+  }
+  grid.innerHTML = state.filteredMedia.map((item) => {
+    const link = isHttpsUrl(item.url) ? `<a class="watch-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : '';
+    return `<article class="media-card">
+      <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
+      <div class="card-footer"><span class="card-source">${escapeHtml(item.createdBy || (state.isLive ? 'Google 試算表' : '示範資料'))}</span>${link}</div>
+    </article>`;
+  }).join('');
+}
+
+function renderAdminState() {
+  $$('.admin-only').forEach((element) => { element.hidden = !state.isAdmin; });
+  $('#loginButton').hidden = state.isAdmin;
+  $('#adminActions').hidden = !state.isAdmin;
+  $('#adminName').textContent = state.user?.displayName || state.user?.email || '管理者';
+}
+
+function render() {
+  renderTypeOptions();
+  renderMedia();
+  renderAdminState();
+  setConnectionState(state.isLive);
+}
+
+function showToast(message) {
+  const toast = $('#toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(state.toastTimer);
+  state.toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+}
+
+function openModal(name) {
+  state.modal = name;
+  $('#modalBackdrop').hidden = false;
+  $$('.modal').forEach((modal) => { modal.hidden = modal.id !== `${name}Modal`; });
+  if (name === 'login') {
+    $('#appsScriptUrlInput').value = state.config.appsScriptUrl || '';
+    $('#googleClientIdInput').value = state.config.googleClientId || '';
+    $('#loginMessage').textContent = state.config.appsScriptUrl && state.config.googleClientId ? '已設定連線，請使用 Google 帳號登入。' : '請先填入連線設定，或使用下方示範管理者模式預覽。';
+    renderGoogleButton();
+  }
+}
+
+function closeModal() {
+  state.modal = null;
+  $('#modalBackdrop').hidden = true;
+  $$('.modal').forEach((modal) => { modal.hidden = true; });
+}
+
+function updateLoginMessage(message, tone = 'error') {
+  const node = $('#loginMessage');
+  node.textContent = message;
+  node.style.color = tone === 'success' ? 'var(--sage-deep)' : 'var(--coral)';
+}
+
+function loadGoogleScript() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (document.querySelector('script[data-google-identity]')) return new Promise((resolve) => { document.querySelector('script[data-google-identity]').addEventListener('load', resolve, { once: true }); });
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleIdentity = 'true';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+function renderGoogleButton() {
+  const target = $('#googleSignInButton');
+  target.innerHTML = '';
+  if (!state.config.googleClientId) {
+    target.innerHTML = '<p class="helper-text">尚未設定 Google OAuth Client ID，完成上方設定後即可顯示 Google 登入按鈕。</p>';
+    return;
+  }
+  loadGoogleScript().then(() => {
+    if (!window.google?.accounts?.id) throw new Error('Google 登入元件尚未就緒。');
+    window.google.accounts.id.initialize({ client_id: state.config.googleClientId, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
+    window.google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 340, logo_alignment: 'left' });
+  }).catch(() => {
+    target.innerHTML = '<p class="helper-text">Google 登入元件載入失敗，請確認網路連線與 Client ID。</p>';
+  });
+}
+
+window.handleGoogleCredential = async function handleGoogleCredential(response) {
+  state.credential = response.credential;
+  if (!state.config.appsScriptUrl) {
+    updateLoginMessage('請先填入 Apps Script Web App URL。');
+    return;
+  }
+  updateLoginMessage('正在向 Google 試算表確認管理者權限…', 'success');
+  try {
+    const result = await submitAndWait({ action: 'auth', credential: state.credential });
+    if (!result?.ok || !result.result?.ok) throw new Error(result?.result?.error || result?.error || '登入驗證失敗。');
+    state.user = result.result;
+    state.isAdmin = Boolean(result.result.isAdmin);
+    if (!state.isAdmin) {
+      updateLoginMessage(`帳號 ${result.result.email || ''} 尚未被加入管理者名單。`);
+      state.credential = null;
+      return;
     }
-    if (!state.settings.apiUrl) throw new Error('請先設定 Apps Script Web App URL。');
-    // 使用 text/plain 讓跨來源 POST 保持 CORS simple request，避免 Apps Script Web App 的 OPTIONS 預檢被擋下。
-    // doPost 仍以 e.postData.contents 解析 JSON，因此不需要修改 API payload 契約。
-    const response = await fetch(state.settings.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ action, item, id }) });
-    if (!response.ok) {
-      if (response.status === 405) throw new Error('Apps Script 部署目前只允許 GET；請確認 Code.gs 包含 doPost(e)，並重新部署 Web App。');
-      throw new Error(`Apps Script 回應 HTTP ${response.status}。`);
-    }
-    const payload = await response.json();
-    if (!payload.ok) throw new Error(payload.error?.message || 'API 回應失敗。');
-    return payload.data;
+    closeModal();
+    render();
+    showToast(`已登入：${state.user.displayName || state.user.email}`);
+  } catch (error) {
+    updateLoginMessage(error.message || '登入驗證失敗。');
+    state.credential = null;
   }
 };
 
-function formatDate(dateValue) {
-  if (!dateValue) return '—';
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return String(dateValue);
-  return new Intl.DateTimeFormat('zh-TW', { month: 'short', day: 'numeric' }).format(date);
-}
-
-function statusClass(status) { return STATUSES.find((entry) => entry.value === status)?.className || 'pending'; }
-function tagsOf(item) { return String(item.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean); }
-function ratingStars(rating) { return rating ? `${'★'.repeat(Math.floor(Number(rating)))}${Number(rating) % 1 ? '½' : ''}` : '未評分'; }
-
-function renderStats() {
-  const total = state.items.length;
-  const pending = state.items.filter((item) => item.status === '待觀看').length;
-  const watching = state.items.filter((item) => item.status === '觀看中').length;
-  const done = state.items.filter((item) => item.status === '已完成').length;
-  $('#stat-strip').innerHTML = [
-    ['收藏總數', total, ''], ['待觀看', pending, 'stat-accent'], ['觀看中', watching, ''], ['已完成', done, '']
-  ].map(([label, number, accent]) => `<div class="stat"><span class="stat-number ${accent}">${number}</span><span class="stat-label">${label}</span></div>`).join('');
-  $('#nav-count').textContent = String(total).padStart(2, '0');
-}
-
-function renderFilters() {
-  const selected = state.filters;
-  $('#type-filters').innerHTML = TYPES.map((value) => chipHtml(value, value === selected.type, 'type')).join('');
-  $('#status-filters').innerHTML = STATUSES.map(({ value }) => chipHtml(value, value === selected.status, 'status')).join('');
-  $('#rating-filters').innerHTML = [4, 3, 2].map((value) => chipHtml(`${value} 分以上`, value === selected.rating, 'rating', value)).join('');
-  $('#category-filters').innerHTML = CATEGORIES.map((value) => chipHtml(value, value === selected.category, 'category')).join('');
-  const tags = [...new Set(state.items.flatMap(tagsOf))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
-  $('#tag-filters').innerHTML = tags.map((value) => chipHtml(`#${value}`, value === selected.tag, 'tag')).join('') || '<span class="muted-label">尚無標籤</span>';
-  $$('.chip').forEach((button) => button.addEventListener('click', () => {
-    const filter = button.dataset.filter;
-    const value = button.dataset.value;
-    state.filters[filter] = state.filters[filter] === value || (filter === 'rating' && state.filters.rating === Number(value)) ? (filter === 'rating' ? 0 : '') : (filter === 'rating' ? Number(value) : value);
-    renderFilters(); renderList();
-  }));
-  const count = Object.values(selected).filter(Boolean).length;
-  $('#filter-badge').textContent = count;
-}
-
-function chipHtml(label, selected, filter, value = label) { return `<button class="chip ${selected ? 'selected' : ''}" data-filter="${escapeHtml(filter)}" data-value="${escapeHtml(value)}">${escapeHtml(label)}</button>`; }
-
-function applyFilters() {
-  const query = state.query.trim().toLowerCase();
-  let list = state.items.filter((item) => {
-    const haystack = [item.title, item.sourceUrl, item.category, item.tags, item.notes].join(' ').toLowerCase();
-    return (!query || haystack.includes(query)) && (!state.filters.type || item.mediaType === state.filters.type) && (!state.filters.status || item.status === state.filters.status) && (!state.filters.category || item.category === state.filters.category) && (!state.filters.tag || tagsOf(item).includes(state.filters.tag)) && (!state.filters.rating || Number(item.rating || 0) >= Number(state.filters.rating));
+function jsonp(params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `__bibleTruth_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement('script');
+    const query = new URLSearchParams({ ...params, callback: callbackName });
+    const timer = setTimeout(() => { cleanup(); reject(new Error('連線逾時，請檢查 Apps Script 網址。')); }, 10000);
+    const cleanup = () => { clearTimeout(timer); delete window[callbackName]; script.remove(); };
+    window[callbackName] = (payload) => { cleanup(); resolve(payload); };
+    script.src = `${state.config.appsScriptUrl.replace(/\/$/, '')}?${query.toString()}`;
+    script.onerror = () => { cleanup(); reject(new Error('無法讀取 Google 試算表。')); };
+    document.body.appendChild(script);
   });
-  list.sort((a, b) => {
-    if (state.sort === 'rating') return Number(b.rating || 0) - Number(a.rating || 0);
-    if (state.sort === 'title') return String(a.title).localeCompare(String(b.title), 'zh-Hant');
-    const field = state.sort === 'created' ? 'createdAt' : 'updatedAt';
-    return new Date(b[field] || 0) - new Date(a[field] || 0);
-  });
-  state.filteredItems = list;
 }
 
-function renderList() {
-  applyFilters();
-  $('#result-count').textContent = state.filteredItems.length;
-  $('#view-caption').textContent = state.settings.mode === 'demo' ? '示範資料 · 即時篩選' : 'Google Sheet · 即時同步';
-  if (!state.filteredItems.length) {
-    $('#media-grid').innerHTML = `<div class="empty-state"><div class="empty-orb">⌕</div><h3>${state.items.length ? '找不到符合的收藏' : '你的收藏架還是空的'}</h3><p>${state.items.length ? '試試調整搜尋字詞或清除篩選條件。' : '先放進第一筆影音，讓靈感有一個回來的地方。'}</p>${state.items.length ? '<button class="secondary-button" id="empty-clear">清除篩選</button>' : '<button class="primary-button" id="empty-add">新增第一筆</button>'}</div>`;
-    $('#empty-clear')?.addEventListener('click', clearFilters);
-    $('#empty-add')?.addEventListener('click', () => openForm());
+async function submitAndWait(payload) {
+  const requestId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+  const body = { ...payload, requestId };
+  await fetch(state.config.appsScriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    const receipt = await jsonp({ action: 'status', requestId });
+    if (receipt?.result?.ok === false || receipt?.result?.code) return receipt;
+    if (receipt?.result || receipt?.ok === false) return receipt;
+  }
+  throw new Error('Google 試算表尚未回覆，請稍後重新整理確認。');
+}
+
+async function loadLiveData() {
+  if (!state.config.appsScriptUrl) return;
+  try {
+    const result = await jsonp({ action: 'list' });
+    if (!result?.ok) throw new Error(result?.error || '資料讀取失敗。');
+    state.media = Array.isArray(result.media) ? result.media : [];
+    state.types = Array.isArray(result.types) && result.types.length ? result.types : [...DEMO_TYPES];
+    state.isLive = true;
+    render();
+  } catch (error) {
+    state.isLive = false;
+    render();
+    showToast(error.message || '目前先使用示範資料。');
+  }
+}
+
+async function saveConnectionSettings() {
+  state.config.appsScriptUrl = $('#appsScriptUrlInput').value.trim();
+  state.config.googleClientId = $('#googleClientIdInput').value.trim();
+  saveConfig();
+  if (state.config.appsScriptUrl && !state.config.appsScriptUrl.endsWith('/exec')) {
+    updateLoginMessage('請使用以 /exec 結尾的正式 Apps Script Web App 網址。');
     return;
   }
-  $('#media-grid').innerHTML = state.filteredItems.map(mediaCardHtml).join('');
-  $$('.media-card').forEach((card) => card.addEventListener('click', (event) => {
-    if (event.target.closest('a')) return;
-    openDetail(card.dataset.id);
-  }));
-}
-
-function mediaCardHtml(item) {
-  const tags = tagsOf(item);
-  const image = item.thumbnailUrl ? `<img src="${escapeHtml(item.thumbnailUrl)}" alt="${escapeHtml(item.title)} 縮圖" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'image-placeholder', textContent:'▶'}))" />` : '<div class="image-placeholder">▶</div>';
-  return `<article class="media-card" data-id="${escapeHtml(item.id)}"><div class="media-card-image">${image}<span class="media-type-pill">${escapeHtml(item.mediaType || '其他')}</span><span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status || '待觀看')}</span></div><div class="media-card-body"><div class="card-category">${escapeHtml(item.category || '未分類')}</div><h3>${escapeHtml(item.title)}</h3><div class="card-meta"><div class="card-tags">${tags.slice(0, 2).map((tag) => `<span class="card-tag">#${escapeHtml(tag)}</span>`).join('')}</div><span class="card-rating">${ratingStars(item.rating)}</span></div><div class="card-footer"><span class="card-time">更新於 ${formatDate(item.updatedAt)}</span><a class="card-open" href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noreferrer">開啟來源 ↗</a></div></div></article>`;
-}
-
-function openDetail(id) {
-  const item = state.items.find((entry) => entry.id === id);
-  if (!item) return;
-  state.selectedItem = item;
-  $('#drawer-kicker').textContent = 'COLLECTION DETAIL';
-  $('#drawer-title').textContent = '收藏詳情';
-  $('#drawer-scroll').innerHTML = detailHtml(item);
-  showDrawer();
-  $('#edit-item').addEventListener('click', () => openForm(item));
-  $('#delete-item').addEventListener('click', () => confirmDelete(item));
-}
-
-function detailHtml(item) {
-  const image = item.thumbnailUrl ? `<img src="${escapeHtml(item.thumbnailUrl)}" alt="${escapeHtml(item.title)} 縮圖" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'image-placeholder', textContent:'▶'}))" />` : '<div class="image-placeholder">▶</div>';
-  return `<div class="detail-image">${image}</div><div class="detail-topline"><span class="card-category">${escapeHtml(item.category || '未分類')}</span><span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span></div><div class="detail-title">${escapeHtml(item.title)}</div><div class="detail-tags">${tagsOf(item).map((tag) => `<span class="card-tag">#${escapeHtml(tag)}</span>`).join('') || '<span class="muted-label">尚未加上標籤</span>'}</div><dl class="detail-grid"><div class="detail-data"><dt>影音類型</dt><dd>${escapeHtml(item.mediaType)}</dd></div><div class="detail-data"><dt>評分</dt><dd class="card-rating">${ratingStars(item.rating)}</dd></div><div class="detail-data"><dt>加入日期</dt><dd>${formatDate(item.createdAt)}</dd></div><div class="detail-data"><dt>最後更新</dt><dd>${formatDate(item.updatedAt)}</dd></div></dl><div class="detail-notes"><span class="detail-label">NOTES</span><p>${escapeHtml(item.notes || '還沒有備註。')}</p></div><div class="drawer-actions"><a class="primary-button" href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noreferrer" style="display:grid;place-items:center;text-decoration:none">開啟來源 ↗</a><button class="secondary-button" id="edit-item">編輯</button><button class="danger-button" id="delete-item">刪除收藏</button></div>`;
-}
-
-function openForm(item = null) {
-  state.selectedItem = item;
-  state.editing = Boolean(item);
-  $('#drawer-kicker').textContent = item ? 'EDIT ENTRY' : 'NEW ENTRY';
-  $('#drawer-title').textContent = item ? '編輯收藏' : '新增收藏';
-  $('#drawer-scroll').innerHTML = formHtml(item || { mediaType: '影片', status: '待觀看', rating: 0, category: '', title: '', sourceUrl: '', thumbnailUrl: '', tags: '', notes: '' });
-  showDrawer();
-  $('#media-form').addEventListener('submit', handleFormSubmit);
-  $$('.rating-star').forEach((star) => star.addEventListener('click', () => { $('#form-rating').value = star.dataset.rating; renderRatingInput(Number(star.dataset.rating)); }));
-  $('#fetch-youtube-info')?.addEventListener('click', () => fetchYoutubeInfo(true));
-  $('#form-url')?.addEventListener('blur', () => fetchYoutubeInfo(false));
-}
-
-function youtubeVideoId(value) {
-  try {
-    const url = new URL(value.trim());
-    const hostname = url.hostname.toLowerCase();
-    if (hostname === 'youtu.be') return url.pathname.slice(1).split('/')[0] || '';
-    if (hostname === 'youtube.com' || hostname.endsWith('.youtube.com')) {
-      if (url.pathname === '/watch') return url.searchParams.get('v') || '';
-      const parts = url.pathname.split('/').filter(Boolean);
-      if (['shorts', 'embed', 'live'].includes(parts[0])) return parts[1] || '';
-    }
-  } catch { /* allow normal non-YouTube links */ }
-  return '';
-}
-
-async function fetchYoutubeInfo(force = false) {
-  const urlInput = $('#form-url');
-  const titleInput = $('#form-title');
-  const thumbnailInput = $('#form-thumbnail');
-  const button = $('#fetch-youtube-info');
-  const videoId = youtubeVideoId(urlInput?.value || '');
-  if (!videoId) return;
-  if (!force && titleInput.value.trim() && thumbnailInput.value.trim()) return;
-  const originalLabel = button?.textContent;
-  if (button) { button.disabled = true; button.textContent = '讀取中…'; }
-  try {
-    // noembed 提供 Access-Control-Allow-Origin，可由靜態前端直接讀取；YouTube oEmbed 本身沒有穩定的 CORS 標頭。
-    const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(urlInput.value.trim())}`);
-    if (!response.ok) throw new Error('YouTube 資訊讀取失敗');
-    const payload = await response.json();
-    if (force || !titleInput.value.trim()) titleInput.value = payload.title || titleInput.value;
-    if (force || !thumbnailInput.value.trim()) thumbnailInput.value = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-    showToast('已帶入 YouTube 標題與縮圖。', 'success');
-  } catch (error) {
-    if (force) showToast(`無法取得 YouTube 資訊：${error.message}`, 'error');
-  } finally {
-    if (button) { button.disabled = false; button.textContent = originalLabel || '取用 YouTube'; }
+  closeModal();
+  if (state.config.appsScriptUrl) {
+    showToast('正在讀取 Google 試算表…');
+    await loadLiveData();
+  } else {
+    state.isLive = false;
+    render();
   }
 }
 
-function formHtml(item) {
-  const select = (id, options, current) => `<select class="select-input" id="${id}">${options.map((option) => `<option ${option === current ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select>`;
-  return `<form id="media-form" class="form-stack"><div class="field"><label class="field-label" for="form-url">來源連結 <span>必填</span></label><div class="field-inline-action"><input class="text-input" id="form-url" type="url" required value="${escapeHtml(item.sourceUrl)}" placeholder="貼上 YouTube 連結後會自動帶入" /><button class="secondary-button youtube-fetch-button" id="fetch-youtube-info" type="button">取用 YouTube</button></div><p class="field-hint compact-hint">貼上 YouTube 網址後離開欄位，或按「取用 YouTube」，會自動帶入標題與縮圖。</p></div><div class="field"><label class="field-label" for="form-title">標題 <span>必填</span></label><input class="text-input" id="form-title" required value="${escapeHtml(item.title)}" placeholder="例如：The art of noticing" /></div><div class="form-row"><div class="field"><label class="field-label" for="form-type">影音類型 <span>必填</span></label>${select('form-type', TYPES, item.mediaType)}</div><div class="field"><label class="field-label" for="form-status">觀看狀態 <span>必填</span></label>${select('form-status', STATUSES.map(({ value }) => value), item.status)}</div></div><div class="field"><label class="field-label" for="form-thumbnail">縮圖網址 <span>選填</span></label><input class="text-input" id="form-thumbnail" type="url" value="${escapeHtml(item.thumbnailUrl)}" placeholder="YouTube 縮圖會自動填入，也可自行修改" /></div><div class="form-row"><div class="field"><label class="field-label" for="form-category">分類</label>${select('form-category', ['未分類', ...CATEGORIES], item.category || '未分類')}</div><div class="field"><label class="field-label" for="form-tags">標籤</label><input class="text-input" id="form-tags" value="${escapeHtml(item.tags)}" placeholder="設計,靈感" /></div></div><div class="field"><span class="field-label">評分</span><div class="rating-input" id="rating-input">${[1, 2, 3, 4, 5].map((rating) => `<button type="button" class="rating-star ${Number(item.rating) >= rating ? 'active' : ''}" data-rating="${rating}" aria-label="${rating} 分">★</button>`).join('')}<input id="form-rating" type="hidden" value="${Number(item.rating) || 0}" /></div></div><div class="field"><label class="field-label" for="form-notes">備註</label><textarea class="textarea-input" id="form-notes" placeholder="記下為什麼收藏，或之後想回來看的地方…">${escapeHtml(item.notes)}</textarea></div><div class="form-footer"><span class="required-note">* 為必要欄位</span><button class="primary-button" type="submit">${state.editing ? '儲存變更' : '加入收藏'}</button></div></form>`;
+function enterDemoAdmin() {
+  state.isLive = false;
+  state.isAdmin = true;
+  state.user = { displayName: '示範管理者', email: 'demo@local.preview' };
+  state.credential = 'demo-credential';
+  closeModal();
+  render();
+  showToast('已進入示範管理者模式；正式環境請使用 Google 登入。');
 }
 
-function renderRatingInput(value) { $$('.rating-star').forEach((star) => star.classList.toggle('active', Number(star.dataset.rating) <= value)); }
+function logout() {
+  state.isAdmin = false;
+  state.user = null;
+  state.credential = null;
+  render();
+  showToast('已登出管理者模式。');
+}
 
-async function handleFormSubmit(event) {
+function openMediaModal() {
+  if (!state.isAdmin) return;
+  renderTypeOptions();
+  if (!state.types.length) {
+    showToast('請先新增至少一個影音類型。');
+    openModal('type');
+    return;
+  }
+  $('#mediaForm').reset();
+  openModal('media');
+}
+
+async function handleMediaSubmit(event) {
   event.preventDefault();
-  const title = $('#form-title').value.trim();
-  const sourceUrl = $('#form-url').value.trim();
-  try { const parsedUrl = new URL(sourceUrl); if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('protocol'); } catch { showToast('請輸入有效的 HTTP(S) 來源連結。', 'error'); return; }
-  if (!title) { showToast('請填寫影音標題。', 'error'); return; }
-  const now = new Date().toISOString();
-  const item = { id: state.selectedItem?.id || `mv-${Date.now()}`, title, mediaType: $('#form-type').value, sourceUrl, thumbnailUrl: $('#form-thumbnail').value.trim(), category: $('#form-category').value === '未分類' ? '' : $('#form-category').value, tags: $('#form-tags').value.trim(), status: $('#form-status').value, rating: Number($('#form-rating').value) || 0, notes: $('#form-notes').value.trim(), createdAt: state.selectedItem?.createdAt || now, updatedAt: now };
-  const submitButton = event.currentTarget.querySelector('button[type="submit"]');
-  submitButton.disabled = true; submitButton.textContent = '儲存中…';
-  try {
-    await dataSource.mutate(state.editing ? 'update' : 'create', item, item.id);
-    await refreshData(false);
-    closeDrawer();
-    showToast(state.editing ? '收藏已更新。' : '已加入收藏架。', 'success');
-  } catch (error) { showToast(error.message, 'error'); submitButton.disabled = false; submitButton.textContent = state.editing ? '儲存變更' : '加入收藏'; }
-}
-
-function confirmDelete(item) {
-  if (!window.confirm(`確定要刪除「${item.title}」嗎？此動作無法復原。`)) return;
-  dataSource.mutate('delete', item, item.id).then(async () => { await refreshData(false); closeDrawer(); showToast('收藏已刪除。', 'success'); }).catch((error) => showToast(error.message, 'error', { label: '重試', handler: () => confirmDelete(item) }));
-}
-
-async function refreshData(showSuccess = true) {
-  $('#media-grid').innerHTML = '<div class="empty-state"><div class="empty-orb">…</div><h3>正在整理你的收藏</h3><p>資料很快就會回來。</p></div>';
-  try {
-    state.items = await dataSource.list();
-    renderStats(); renderFilters(); renderList();
-    if (showSuccess) showToast('清單已更新。', 'success');
-  } catch (error) {
-    state.items = [];
-    renderStats(); renderFilters(); renderList();
-    showToast(error.message, 'error', { label: '重試', handler: () => refreshData(false) });
+  const form = new FormData(event.currentTarget);
+  const record = Object.fromEntries(form.entries());
+  if (!isHttpsUrl(record.url)) { showToast('影音網址必須使用 https://。'); return; }
+  if (!state.isLive) {
+    state.media.unshift({ ...record, id: `local-${Date.now()}`, createdAt: new Date().toISOString(), createdBy: state.user?.displayName || '示範管理者' });
+    closeModal();
+    render();
+    showToast('已加入示範清單。');
+    return;
   }
-}
-
-function showDrawer() { $('#drawer-backdrop').hidden = false; requestAnimationFrame(() => $('#drawer').classList.add('open')); $('#drawer').setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; }
-function closeDrawer() { $('#drawer').classList.remove('open'); $('#drawer').setAttribute('aria-hidden', 'true'); setTimeout(() => { $('#drawer-backdrop').hidden = true; }, 250); document.body.style.overflow = ''; }
-function clearFilters() { state.filters = { type: '', status: '', rating: 0, category: '', tag: '' }; state.query = ''; $('#search-input').value = ''; renderFilters(); renderList(); }
-function showToast(message, type = '', action = null) { const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.append(document.createTextNode(message)); if (action) { const button = document.createElement('button'); button.className = 'toast-action'; button.textContent = action.label; button.addEventListener('click', () => { toast.remove(); action.handler(); }); toast.append(button); } $('#toast-stack').appendChild(toast); setTimeout(() => toast.remove(), 5000); }
-
-function setView(view, { syncUrl = true } = {}) {
-  $$('[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
-  $('#library-view').hidden = view !== 'library';
-  $('#settings-view').hidden = view !== 'settings';
-  if (view === 'settings') renderSettings();
-  if (syncUrl) window.history.pushState({}, '', view === 'settings' ? '/settings' : '/');
-}
-
-function renderSettings() {
-  state.settings = getSettings();
-  $('#api-url').value = state.settings.apiUrl || '';
-  $$('.mode-button').forEach((button) => button.classList.toggle('active', button.dataset.mode === state.settings.mode));
-  $('#mode-label').textContent = state.settings.mode === 'demo' ? '示範資料' : 'Google Sheet API';
-  $('#connection-pill').textContent = state.settings.mode === 'demo' ? '示範模式' : 'API 模式';
-  $('#field-table').innerHTML = FIELD_DEFINITIONS.map(([field, description]) => `<div class="field-token"><strong>${field}</strong><span>${description}</span></div>`).join('');
-}
-
-async function testConnection() {
-  const url = $('#api-url').value.trim();
-  const result = $('#connection-result');
-  if (!url) { result.hidden = false; result.className = 'connection-result error'; result.textContent = '請先輸入 Apps Script Web App URL。'; return; }
-  result.hidden = false; result.className = 'connection-result'; result.textContent = '連線測試中…';
   try {
-    const response = await fetch(`${url}?action=meta`);
-    const payload = await response.json();
-    if (!payload.ok) throw new Error(payload.error?.message || 'API 回應失敗。');
-    result.className = 'connection-result ok'; result.textContent = `連線成功。API 版本 ${payload.meta?.version || '—'}，可以切換至 Google Sheet 模式。`;
-  } catch (error) { result.className = 'connection-result error'; result.textContent = `連線失敗：${error.message}`; }
+    const receipt = await submitAndWait({ action: 'addMedia', credential: state.credential, record });
+    if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音儲存失敗。');
+    closeModal();
+    await loadLiveData();
+    showToast('影音已加入收藏清單。');
+  } catch (error) { showToast(error.message || '影音儲存失敗。'); }
 }
 
-function saveSettings() {
-  const mode = $('.mode-button.active')?.dataset.mode || 'demo';
-  const apiUrl = $('#api-url').value.trim();
-  state.settings = { mode, apiUrl };
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
-  $('#mode-label').textContent = mode === 'demo' ? '示範資料' : 'Google Sheet API';
-  setView('library');
-  refreshData(false);
-  showToast(mode === 'demo' ? '已切換至示範資料。' : '資料來源設定已儲存。', 'success');
+async function handleTypeSubmit(event) {
+  event.preventDefault();
+  const name = new FormData(event.currentTarget).get('name').trim();
+  if (!name) return;
+  if (!state.isLive) {
+    state.types.push({ id: `local-type-${Date.now()}`, name });
+    closeModal();
+    render();
+    showToast('已新增示範影音類型。');
+    return;
+  }
+  try {
+    const receipt = await submitAndWait({ action: 'addType', credential: state.credential, name });
+    if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音類型儲存失敗。');
+    closeModal();
+    await loadLiveData();
+    showToast('影音類型已新增。');
+  } catch (error) { showToast(error.message || '影音類型儲存失敗。'); }
 }
 
-function init() {
-  state.settings = getSettings();
-  $('#search-input').addEventListener('input', (event) => { state.query = event.target.value; renderList(); });
-  $('#sort-select').addEventListener('change', (event) => { state.sort = event.target.value; renderList(); });
-  $('#filter-toggle').addEventListener('click', () => { $('#filter-panel').hidden = !$('#filter-panel').hidden; });
-  $('#clear-filters').addEventListener('click', clearFilters);
-  $('#add-button').addEventListener('click', () => openForm());
-  $('#mobile-add-button').addEventListener('click', () => openForm());
-  $('#refresh-button').addEventListener('click', () => refreshData(true));
-  $('#close-drawer').addEventListener('click', closeDrawer);
-  $('#drawer-backdrop').addEventListener('click', closeDrawer);
-  $$('[data-view]').forEach((item) => item.addEventListener('click', (event) => { event.preventDefault(); setView(item.dataset.view); }));
-  window.addEventListener('popstate', () => setView(window.location.pathname === '/settings' ? 'settings' : 'library', { syncUrl: false }));
-  $$('.mode-button').forEach((button) => button.addEventListener('click', () => { $$('.mode-button').forEach((entry) => entry.classList.remove('active')); button.classList.add('active'); }));
-  $('#test-connection').addEventListener('click', testConnection);
-  $('#save-settings').addEventListener('click', saveSettings);
-  document.addEventListener('keydown', (event) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#search-input').focus(); } if (event.key === 'Escape' && !$('#drawer-backdrop').hidden) closeDrawer(); });
-  setView(window.location.pathname === '/settings' ? 'settings' : 'library', { syncUrl: false });
-  refreshData(false);
+function wireEvents() {
+  $('#loginButton').addEventListener('click', () => openModal('login'));
+  $('#openSettingsButton').addEventListener('click', () => openModal('login'));
+  $('#logoutButton').addEventListener('click', logout);
+  $('#addMediaButton').addEventListener('click', openMediaModal);
+  $('#addTypeButton').addEventListener('click', () => openModal('type'));
+  $('#saveSettingsButton').addEventListener('click', saveConnectionSettings);
+  $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
+  $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
+  $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
+  $('#mediaForm').addEventListener('submit', handleMediaSubmit);
+  $('#typeForm').addEventListener('submit', handleTypeSubmit);
+  $$('[data-close-modal]').forEach((button) => button.addEventListener('click', closeModal));
+  $('#modalBackdrop').addEventListener('click', (event) => { if (event.target.id === 'modalBackdrop') closeModal(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.modal) closeModal(); });
 }
 
-init();
+wireEvents();
+render();
+loadLiveData();
