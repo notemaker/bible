@@ -308,7 +308,9 @@ function openMediaModal() {
   titleLookupRequest += 1;
   $('#mediaUrlStatus').textContent = '';
   $('#mediaThumbnailStatus').textContent = '';
+  $('#mediaDescriptionStatus').textContent = '';
   $('#mediaForm [name="title"]').dataset.manual = 'false';
+  $('#mediaForm [name="description"]').dataset.manual = 'false';
   openModal('media');
 }
 
@@ -347,8 +349,41 @@ function updateVideoThumbnail() {
   status.textContent = thumbnail ? '已自動帶入 YouTube 影片縮圖網址。' : (form.elements.url.value.trim() ? '目前只會自動產生 YouTube 縮圖網址。' : '');
 }
 
+async function lookupVideoDescription() {
+  const form = $('#mediaForm');
+  const youtubeUrl = getYouTubeUrl(form.elements.url.value);
+  const descriptionInput = form.elements.description;
+  const status = $('#mediaDescriptionStatus');
+  if (!youtubeUrl) {
+    status.textContent = form.elements.url.value.trim() ? '目前只會自動讀取 YouTube 影片說明，其他影音可手動輸入。' : '';
+    return;
+  }
+  if (!state.config.appsScriptUrl) {
+    status.textContent = '尚未設定 Apps Script，請手動輸入影片說明。';
+    return;
+  }
+  const request = ++descriptionLookupRequest;
+  status.textContent = '正在讀取 YouTube 影片說明…';
+  try {
+    const result = await jsonp({ action: 'videoInfo', url: youtubeUrl });
+    if (request !== descriptionLookupRequest) return;
+    if (!result?.ok) throw new Error(result?.error || '找不到影片說明。');
+    const description = String(result.description || '').trim();
+    if (description && descriptionInput.dataset.manual !== 'true') {
+      descriptionInput.dataset.filling = 'true';
+      descriptionInput.value = description.slice(0, 300);
+      descriptionInput.dataset.filling = 'false';
+    }
+    status.textContent = description ? '已自動帶入影片說明前 300 字，可再自行修改。' : '這部影片沒有公開說明，請手動輸入。';
+  } catch (error) {
+    if (request === descriptionLookupRequest) status.textContent = error.message || '無法取得影片說明，請手動輸入。';
+  }
+}
+
 let titleLookupTimer;
+let descriptionLookupTimer;
 let titleLookupRequest = 0;
+let descriptionLookupRequest = 0;
 
 async function lookupVideoTitle() {
   const form = $('#mediaForm');
@@ -434,9 +469,12 @@ function wireEvents() {
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
-  $('#mediaForm [name="url"]').addEventListener('input', () => { updateVideoThumbnail(); scheduleVideoTitleLookup(); });
-  $('#mediaForm [name="url"]').addEventListener('blur', lookupVideoTitle);
+  $('#mediaForm [name="url"]').addEventListener('input', () => { updateVideoThumbnail(); scheduleVideoTitleLookup(); clearTimeout(descriptionLookupTimer); descriptionLookupTimer = setTimeout(lookupVideoDescription, 450); });
+  $('#mediaForm [name="url"]').addEventListener('blur', () => { lookupVideoTitle(); lookupVideoDescription(); });
   $('#mediaForm [name="title"]').addEventListener('input', (event) => {
+    if (event.target.dataset.filling !== 'true') event.target.dataset.manual = 'true';
+  });
+  $('#mediaForm [name="description"]').addEventListener('input', (event) => {
     if (event.target.dataset.filling !== 'true') event.target.dataset.manual = 'true';
   });
   $('#mediaForm').addEventListener('submit', handleMediaSubmit);
