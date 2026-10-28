@@ -299,7 +299,9 @@ function openMediaModal() {
     return;
   }
   $('#mediaForm').reset();
+  titleLookupRequest += 1;
   $('#mediaUrlStatus').textContent = '';
+  $('#mediaThumbnailStatus').textContent = '';
   $('#mediaForm [name="title"]').dataset.manual = 'false';
   openModal('media');
 }
@@ -317,6 +319,26 @@ function getYouTubeUrl(value) {
     return '';
   }
   return '';
+}
+
+function getYouTubeThumbnail(value) {
+  const youtubeUrl = getYouTubeUrl(value);
+  if (!youtubeUrl) return '';
+  try {
+    const videoId = new URL(youtubeUrl).searchParams.get('v');
+    return videoId ? `https://img.youtube.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg` : '';
+  } catch {
+    return '';
+  }
+}
+
+function updateVideoThumbnail() {
+  const form = $('#mediaForm');
+  const thumbnailInput = form.elements.thumbnail;
+  const status = $('#mediaThumbnailStatus');
+  const thumbnail = getYouTubeThumbnail(form.elements.url.value);
+  thumbnailInput.value = thumbnail;
+  status.textContent = thumbnail ? '已自動帶入 YouTube 影片縮圖網址。' : (form.elements.url.value.trim() ? '目前只會自動產生 YouTube 縮圖網址。' : '');
 }
 
 let titleLookupTimer;
@@ -406,7 +428,7 @@ function wireEvents() {
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
-  $('#mediaForm [name="url"]').addEventListener('input', scheduleVideoTitleLookup);
+  $('#mediaForm [name="url"]').addEventListener('input', () => { updateVideoThumbnail(); scheduleVideoTitleLookup(); });
   $('#mediaForm [name="url"]').addEventListener('blur', lookupVideoTitle);
   $('#mediaForm [name="title"]').addEventListener('input', (event) => {
     if (event.target.dataset.filling !== 'true') event.target.dataset.manual = 'true';
