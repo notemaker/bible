@@ -102,7 +102,10 @@ function renderMedia() {
   }
   grid.innerHTML = state.filteredMedia.map((item) => {
     const link = isHttpsUrl(item.url) ? `<a class="watch-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : '';
+    const thumbnail = item.thumbnail || getYouTubeThumbnail(item.url);
+    const thumbnailMarkup = thumbnail ? `<div class="media-thumb"><img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(item.title)} 的縮圖" loading="lazy" onerror="this.closest('.media-thumb').hidden=true" /></div>` : '';
     return `<article class="media-card">
+      ${thumbnailMarkup}
       <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
       <h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
