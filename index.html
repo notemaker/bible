@@ -115,11 +115,11 @@
 
       <div id="typeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="typeTitle" hidden>
         <button class="modal-close" data-close-modal aria-label="關閉">×</button>
-        <p class="eyebrow accent">NEW CATEGORY</p>
+        <p class="eyebrow accent">CATEGORY MANAGEMENT</p>
         <h2 id="typeTitle">新增影音類型</h2>
         <form id="typeForm" class="form-stack">
           <label>類型名稱<span class="required">*</span><input name="name" required maxlength="40" placeholder="例如：主日講道" /></label>
-          <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button class="button button-primary" type="submit">新增類型</button></div>
+          <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button id="typeSubmitButton" class="button button-primary" type="submit">新增類型</button></div>
         </form>
         <div class="type-management">
           <p class="section-label">現有影音類型</p>

@@ -131,6 +131,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .section-label { margin: 0 0 9px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
 .type-list { display: grid; gap: 7px; }
 .type-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; padding: 0 10px; border: 1px solid var(--line); color: var(--ink-soft); background: #fbfcfa; font-size: 12px; }
+.type-row-actions { display: inline-flex; align-items: center; gap: 12px; }
+.type-edit { padding: 4px 0; border: 0; color: var(--sage-deep); background: transparent; font-size: 11px; font-weight: 700; }
+.type-edit:hover { color: var(--coral); }
+.type-edit:disabled { opacity: 0.55; cursor: wait; }
 .type-delete { padding: 4px 0; border: 0; color: var(--muted); background: transparent; font-size: 11px; font-weight: 700; }
 .type-delete:hover { color: var(--coral); }
 .type-delete:disabled { opacity: 0.55; cursor: wait; }

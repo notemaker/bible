@@ -17,7 +17,7 @@ const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
 ];
 const DEFAULT_CONFIG = {
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxBKeXi86p5SshDUiOiQOME3vsPZclLPqJ240rJ1WNnYGwY3xaDyHcs1l7081GEqHKB8g/exec',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbywV6iqZ3yV5qlmpejFtsy6QmhdABj4yqLIqIf4LQyI-6knsrmPjOa5wNJYbf1Zg7Th0A/exec',
   googleClientId: '736171088462-ias9uqmm9j7crschd80ddj0je2mf8a2k.apps.googleusercontent.com'
 };
 const state = {
@@ -31,6 +31,7 @@ const state = {
   credential: null,
   modal: null,
   editingMediaId: null,
+  editingTypeId: null,
   search: '',
   type: 'all',
   toastTimer: null
@@ -103,7 +104,7 @@ function renderTypeOptions() {
 function renderTypeManagement() {
   const list = $('#typeList');
   if (!list) return;
-  list.innerHTML = state.types.length ? state.types.map((type) => `<div class="type-row"><span>${escapeHtml(type.name)}</span><button class="type-delete" type="button" data-delete-type="${escapeHtml(type.id)}" aria-label="刪除影音類型：${escapeHtml(type.name)}">刪除</button></div>`).join('') : '<p class="helper-text">目前沒有影音類型。</p>';
+  list.innerHTML = state.types.length ? state.types.map((type) => `<div class="type-row"><span>${escapeHtml(type.name)}</span><span class="type-row-actions"><button class="type-edit" type="button" data-edit-type="${escapeHtml(type.id)}" aria-label="修改影音類型：${escapeHtml(type.name)}">修改</button><button class="type-delete" type="button" data-delete-type="${escapeHtml(type.id)}" aria-label="刪除影音類型：${escapeHtml(type.name)}">刪除</button></span></div>`).join('') : '<p class="helper-text">目前沒有影音類型。</p>';
 }
 
 function renderMedia() {
@@ -555,23 +556,54 @@ async function handleTypeDelete(typeId, button) {
   }
 }
 
+function openTypeModal() {
+  if (!state.isAdmin) return;
+  state.editingTypeId = null;
+  $('#typeForm').reset();
+  $('#typeTitle').textContent = '新增影音類型';
+  $('#typeSubmitButton').textContent = '新增類型';
+  openModal('type');
+}
+
+function openEditTypeModal(typeId) {
+  if (!state.isAdmin) return;
+  const item = state.types.find((type) => String(type.id) === String(typeId));
+  if (!item) return;
+  state.editingTypeId = item.id;
+  $('#typeForm').reset();
+  $('#typeForm').elements.name.value = item.name || '';
+  $('#typeTitle').textContent = '修改影音類型';
+  $('#typeSubmitButton').textContent = '更新類型';
+  openModal('type');
+}
+
 async function handleTypeSubmit(event) {
   event.preventDefault();
   const name = new FormData(event.currentTarget).get('name').trim();
   if (!name) return;
   if (!state.isLive) {
-    state.types.push({ id: `local-type-${Date.now()}`, name });
+    if (state.editingTypeId) {
+      const oldType = state.types.find((type) => String(type.id) === String(state.editingTypeId));
+      state.types = state.types.map((type) => String(type.id) === String(state.editingTypeId) ? { ...type, name } : type);
+      if (oldType) state.media = state.media.map((item) => item.type === oldType.name ? { ...item, type: name } : item);
+    } else {
+      state.types.push({ id: `local-type-${Date.now()}`, name });
+    }
     closeModal();
     render();
-    showToast('已新增示範影音類型。');
+    showToast(state.editingTypeId ? '示範影音類型已更新。' : '已新增示範影音類型。');
+    state.editingTypeId = null;
     return;
   }
   try {
-    const receipt = await submitAndWait({ action: 'addType', credential: state.credential, name });
+    const action = state.editingTypeId ? 'updateType' : 'addType';
+    const payload = state.editingTypeId ? { action, credential: state.credential, typeId: state.editingTypeId, name } : { action, credential: state.credential, name };
+    const receipt = await submitAndWait(payload);
     if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音類型儲存失敗。');
     closeModal();
+    state.editingTypeId = null;
     await loadLiveData();
-    showToast('影音類型已新增。');
+    showToast(action === 'updateType' ? '影音類型已更新。' : '影音類型已新增。');
   } catch (error) { showToast(error.message || '影音類型儲存失敗。'); }
 }
 
@@ -580,7 +612,7 @@ function wireEvents() {
   $('#openSettingsButton').addEventListener('click', () => openModal('login'));
   $('#logoutButton').addEventListener('click', logout);
   $('#addMediaButton').addEventListener('click', openMediaModal);
-  $('#addTypeButton').addEventListener('click', () => openModal('type'));
+  $('#addTypeButton').addEventListener('click', openTypeModal);
   $('#saveSettingsButton').addEventListener('click', saveConnectionSettings);
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
@@ -595,6 +627,11 @@ function wireEvents() {
     if (button) handleMediaDelete(button.dataset.deleteMedia, button);
   });
   $('#typeList').addEventListener('click', (event) => {
+    const editButton = event.target.closest('[data-edit-type]');
+    if (editButton) {
+      openEditTypeModal(editButton.dataset.editType);
+      return;
+    }
     const button = event.target.closest('[data-delete-type]');
     if (button) handleTypeDelete(button.dataset.deleteType, button);
   });
