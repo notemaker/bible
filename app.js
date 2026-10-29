@@ -27,6 +27,7 @@ const state = {
   user: null,
   credential: null,
   modal: null,
+  editingMediaId: null,
   search: '',
   type: 'all',
   toastTimer: null
@@ -93,6 +94,13 @@ function renderTypeOptions() {
   filter.value = state.types.some((type) => type.name === state.type) ? state.type : 'all';
   const mediaType = $('#mediaTypeInput');
   mediaType.innerHTML = state.types.length ? state.types.map((type) => `<option value="${escapeHtml(type.name)}">${escapeHtml(type.name)}</option>`).join('') : '<option value="">請先新增影音類型</option>';
+  renderTypeManagement();
+}
+
+function renderTypeManagement() {
+  const list = $('#typeList');
+  if (!list) return;
+  list.innerHTML = state.types.length ? state.types.map((type) => `<div class="type-row"><span>${escapeHtml(type.name)}</span><button class="type-delete" type="button" data-delete-type="${escapeHtml(type.id)}" aria-label="刪除影音類型：${escapeHtml(type.name)}">刪除</button></div>`).join('') : '<p class="helper-text">目前沒有影音類型。</p>';
 }
 
 function renderMedia() {
@@ -116,13 +124,13 @@ function renderMedia() {
     const thumbnailMarkup = thumbnail ? (videoUrl
       ? `<a class="media-thumb media-thumb-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer" aria-label="開啟影音：${escapeHtml(item.title)}">${thumbnailImage}</a>`
       : `<div class="media-thumb">${thumbnailImage}</div>`) : '';
-    const deleteButton = state.isAdmin ? `<button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
+    const adminButtons = state.isAdmin ? `<button class="card-edit" type="button" data-edit-media="${escapeHtml(item.id)}" aria-label="修改影音：${escapeHtml(item.title)}">修改</button><button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
     return `<article class="media-card">
       ${thumbnailMarkup}
       <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
       <h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
-      <div class="card-footer"><span class="card-source">${escapeHtml(item.createdBy || (state.isLive ? 'Google 試算表' : '示範資料'))}</span><div class="card-actions">${deleteButton}${link}</div></div>
+      <div class="card-footer"><span class="card-source">${escapeHtml(item.createdBy || (state.isLive ? 'Google 試算表' : '示範資料'))}</span><div class="card-actions">${adminButtons}${link}</div></div>
     </article>`;
   }).join('');
 }
@@ -317,6 +325,7 @@ function openMediaModal() {
     openModal('type');
     return;
   }
+  state.editingMediaId = null;
   $('#mediaForm').reset();
   titleLookupRequest += 1;
   $('#mediaUrlStatus').textContent = '';
@@ -324,6 +333,31 @@ function openMediaModal() {
   $('#mediaDescriptionStatus').textContent = '';
   $('#mediaForm [name="title"]').dataset.manual = 'false';
   $('#mediaForm [name="description"]').dataset.manual = 'false';
+  $('#mediaTitle').textContent = '新增影音';
+  $('#mediaSubmitButton').textContent = '儲存影音';
+  openModal('media');
+}
+
+function openEditMediaModal(mediaId) {
+  if (!state.isAdmin) return;
+  const item = state.media.find((media) => String(media.id) === String(mediaId));
+  if (!item) return;
+  state.editingMediaId = item.id;
+  renderTypeOptions();
+  const form = $('#mediaForm');
+  form.reset();
+  form.elements.url.value = item.url || '';
+  form.elements.title.value = item.title || '';
+  form.elements.thumbnail.value = item.thumbnail || getYouTubeThumbnail(item.url);
+  form.elements.type.value = item.type || '';
+  form.elements.description.value = item.description || '';
+  form.elements.title.dataset.manual = 'true';
+  form.elements.description.dataset.manual = 'true';
+  $('#mediaUrlStatus').textContent = '';
+  $('#mediaThumbnailStatus').textContent = '';
+  $('#mediaDescriptionStatus').textContent = '';
+  $('#mediaTitle').textContent = '修改影音';
+  $('#mediaSubmitButton').textContent = '更新影音';
   openModal('media');
 }
 
@@ -437,18 +471,26 @@ async function handleMediaSubmit(event) {
   const record = Object.fromEntries(form.entries());
   if (!isHttpsUrl(record.url)) { showToast('影音網址必須使用 https://。'); return; }
   if (!state.isLive) {
-    state.media.unshift({ ...record, id: `local-${Date.now()}`, createdAt: new Date().toISOString(), createdBy: state.user?.displayName || '示範管理者' });
+    if (state.editingMediaId) {
+      state.media = state.media.map((item) => String(item.id) === String(state.editingMediaId) ? { ...item, ...record } : item);
+    } else {
+      state.media.unshift({ ...record, id: `local-${Date.now()}`, createdAt: new Date().toISOString(), createdBy: state.user?.displayName || '示範管理者' });
+    }
     closeModal();
     render();
-    showToast('已加入示範清單。');
+    showToast(state.editingMediaId ? '示範影音已更新。' : '已加入示範清單。');
+    state.editingMediaId = null;
     return;
   }
   try {
-    const receipt = await submitAndWait({ action: 'addMedia', credential: state.credential, record });
-    if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音儲存失敗。');
+    const action = state.editingMediaId ? 'updateMedia' : 'addMedia';
+    const payload = state.editingMediaId ? { action, credential: state.credential, mediaId: state.editingMediaId, record } : { action, credential: state.credential, record };
+    const receipt = await submitAndWait(payload);
+    if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || (state.editingMediaId ? '影音更新失敗。' : '影音儲存失敗。'));
     closeModal();
+    state.editingMediaId = null;
     await loadLiveData();
-    showToast('影音已加入收藏清單。');
+    showToast(action === 'updateMedia' ? '影音內容已更新。' : '影音已加入收藏清單。');
   } catch (error) { showToast(error.message || '影音儲存失敗。'); }
 }
 
@@ -470,6 +512,32 @@ async function handleMediaDelete(mediaId, button) {
     showToast(state.isLive ? '影音已從 Google 試算表刪除。' : '影音已從示範收藏清單移除。');
   } catch (error) {
     showToast(error.message || '影音刪除失敗。');
+  } finally {
+    if (button.isConnected) {
+      button.disabled = false;
+      button.textContent = '刪除';
+    }
+  }
+}
+
+async function handleTypeDelete(typeId, button) {
+  if (!state.isAdmin) return;
+  const item = state.types.find((type) => String(type.id) === String(typeId));
+  if (!item) return;
+  if (!window.confirm(`確定刪除影音類型「${item.name}」嗎？\n若已有影音使用此類型，系統會拒絕刪除。`)) return;
+  button.disabled = true;
+  button.textContent = '刪除中…';
+  try {
+    if (state.isLive) {
+      const receipt = await submitAndWait({ action: 'deleteType', credential: state.credential, typeId: item.id });
+      if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音類型刪除失敗。');
+    }
+    state.types = state.types.filter((type) => String(type.id) !== String(typeId));
+    if (state.type === item.name) state.type = 'all';
+    render();
+    showToast(state.isLive ? '影音類型已刪除。' : '示範影音類型已刪除。');
+  } catch (error) {
+    showToast(error.message || '影音類型刪除失敗。');
   } finally {
     if (button.isConnected) {
       button.disabled = false;
@@ -509,8 +577,17 @@ function wireEvents() {
   $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
   $('#mediaGrid').addEventListener('click', (event) => {
+    const editButton = event.target.closest('[data-edit-media]');
+    if (editButton) {
+      openEditMediaModal(editButton.dataset.editMedia);
+      return;
+    }
     const button = event.target.closest('[data-delete-media]');
     if (button) handleMediaDelete(button.dataset.deleteMedia, button);
+  });
+  $('#typeList').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-delete-type]');
+    if (button) handleTypeDelete(button.dataset.deleteType, button);
   });
   $('#mediaForm [name="url"]').addEventListener('input', () => { updateVideoThumbnail(); scheduleVideoTitleLookup(); clearTimeout(descriptionLookupTimer); descriptionLookupTimer = setTimeout(lookupVideoDescription, 450); });
   $('#mediaForm [name="url"]').addEventListener('blur', () => { lookupVideoTitle(); lookupVideoDescription(); });

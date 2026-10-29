@@ -92,6 +92,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 22px; }
 .card-actions { display: inline-flex; align-items: center; gap: 12px; }
 .card-source { color: var(--muted); font-size: 10px; }
+.card-edit { padding: 4px 0; border: 0; color: var(--sage-deep); background: transparent; font-size: 11px; font-weight: 700; }
+.card-edit:hover { color: var(--coral); }
+.card-edit:disabled { opacity: 0.55; cursor: wait; }
 .card-delete { padding: 4px 0; border: 0; color: var(--muted); background: transparent; font-size: 11px; font-weight: 700; }
 .card-delete:hover { color: var(--coral); }
 .card-delete:disabled { opacity: 0.55; cursor: wait; }
@@ -124,6 +127,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .form-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 4px; }
 .preview-login { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 25px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
 .preview-login .text-button { margin-left: 0; }
+.type-management { margin-top: 25px; border-top: 1px solid var(--line); padding-top: 17px; }
+.section-label { margin: 0 0 9px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+.type-list { display: grid; gap: 7px; }
+.type-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; padding: 0 10px; border: 1px solid var(--line); color: var(--ink-soft); background: #fbfcfa; font-size: 12px; }
+.type-delete { padding: 4px 0; border: 0; color: var(--muted); background: transparent; font-size: 11px; font-weight: 700; }
+.type-delete:hover { color: var(--coral); }
+.type-delete:disabled { opacity: 0.55; cursor: wait; }
 code { padding: 2px 4px; color: var(--sage-deep); background: var(--sage); font-family: ui-monospace, monospace; font-size: 0.9em; }
 .toast { position: fixed; z-index: 30; right: 24px; bottom: 24px; max-width: min(340px, calc(100% - 48px)); padding: 12px 15px; color: #fff; background: var(--ink); box-shadow: 0 15px 35px rgba(20, 38, 29, 0.22); font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity 180ms ease, transform 180ms ease; }
 .toast.show { opacity: 1; transform: translateY(0); }

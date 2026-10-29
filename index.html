@@ -109,7 +109,7 @@
           <label>縮圖網址<input name="thumbnail" type="url" placeholder="輸入影音網址後自動帶入" /><span id="mediaThumbnailStatus" class="helper-text" role="status"></span></label>
           <label>影音類型<span class="required">*</span><select name="type" id="mediaTypeInput" required></select></label>
           <label>簡短說明<textarea name="description" maxlength="300" rows="3" placeholder="輸入 YouTube 網址後自動帶入影片說明，也可自行修改"></textarea><span id="mediaDescriptionStatus" class="helper-text" role="status"></span></label>
-          <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button class="button button-primary" type="submit">儲存影音</button></div>
+          <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button id="mediaSubmitButton" class="button button-primary" type="submit">儲存影音</button></div>
         </form>
       </div>
 
@@ -121,6 +121,10 @@
           <label>類型名稱<span class="required">*</span><input name="name" required maxlength="40" placeholder="例如：主日講道" /></label>
           <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button class="button button-primary" type="submit">新增類型</button></div>
         </form>
+        <div class="type-management">
+          <p class="section-label">現有影音類型</p>
+          <div id="typeList" class="type-list" aria-live="polite"></div>
+        </div>
       </div>
     </div>
 
