@@ -12,7 +12,9 @@ const DEMO_MEDIA = [
 ];
 
 const CONFIG_KEY = 'bible-truth-config';
-const LEGACY_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec';
+const LEGACY_APPS_SCRIPT_URLS = [
+  'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec'
+];
 const DEFAULT_CONFIG = {
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec',
   googleClientId: '736171088462-ias9uqmm9j7crschd80ddj0je2mf8a2k.apps.googleusercontent.com'
@@ -39,7 +41,7 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 function loadConfig() {
   try {
     const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
-    if (saved.appsScriptUrl === LEGACY_APPS_SCRIPT_URL) saved.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
+    if (LEGACY_APPS_SCRIPT_URLS.includes(saved.appsScriptUrl)) saved.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
     return { ...DEFAULT_CONFIG, ...saved };
   } catch {
     return { ...DEFAULT_CONFIG };
