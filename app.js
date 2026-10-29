@@ -13,10 +13,11 @@ const DEMO_MEDIA = [
 
 const CONFIG_KEY = 'bible-truth-config';
 const LEGACY_APPS_SCRIPT_URLS = [
-  'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec'
+  'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
+  'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
 ];
 const DEFAULT_CONFIG = {
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxBKeXi86p5SshDUiOiQOME3vsPZclLPqJ240rJ1WNnYGwY3xaDyHcs1l7081GEqHKB8g/exec',
   googleClientId: '736171088462-ias9uqmm9j7crschd80ddj0je2mf8a2k.apps.googleusercontent.com'
 };
 const state = {
@@ -254,13 +255,19 @@ function jsonp(params) {
   });
 }
 
-async function submitAndWait(payload) {
+async function submitAndWait(payload, allowEndpointRecovery = true) {
   const requestId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
   const body = { ...payload, requestId };
   await fetch(state.config.appsScriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
   for (let attempt = 0; attempt < 12; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 650));
     const receipt = await jsonp({ action: 'status', requestId });
+    if (receipt?.result?.error === '不支援的寫入操作' && allowEndpointRecovery && state.config.appsScriptUrl !== DEFAULT_CONFIG.appsScriptUrl) {
+      state.config.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
+      saveConfig();
+      showToast('已切換到最新 Apps Script，正在重試…');
+      return submitAndWait(payload, false);
+    }
     if (receipt?.result?.ok === false || receipt?.result?.code) return receipt;
     if (receipt?.result || receipt?.ok === false) return receipt;
   }
