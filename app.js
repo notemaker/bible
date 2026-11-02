@@ -134,7 +134,7 @@ function renderMedia() {
       ${thumbnailMarkup}
       <h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
-      <div class="card-footer"><div class="card-actions">${adminButtons}${link}</div></div>
+      <div class="card-footer"><div class="card-admin-actions">${adminButtons}</div>${link}</div>
     </article>`;
   }).join('');
 }
