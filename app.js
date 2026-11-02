@@ -130,11 +130,11 @@ function renderMedia() {
       : `<div class="media-thumb">${thumbnailImage}</div>`) : '';
     const adminButtons = state.isAdmin ? `<button class="card-edit" type="button" data-edit-media="${escapeHtml(item.id)}" aria-label="修改影音：${escapeHtml(item.title)}">修改</button><button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
     return `<article class="media-card">
-      ${thumbnailMarkup}
       <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
+      ${thumbnailMarkup}
       <h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
-      <div class="card-footer"><span class="card-source">${escapeHtml(item.createdBy || (state.isLive ? 'Google 試算表' : '示範資料'))}</span><div class="card-actions">${adminButtons}${link}</div></div>
+      <div class="card-footer"><div class="card-actions">${adminButtons}${link}</div></div>
     </article>`;
   }).join('');
 }
