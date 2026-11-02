@@ -84,6 +84,39 @@ function isHttpsUrl(value) {
   }
 }
 
+function getVideoSource(value) {
+  if (!isHttpsUrl(value)) return null;
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    let videoId = '';
+    if (host === 'youtu.be') {
+      videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
+    } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+      videoId = parsed.searchParams.get('v') || (parsed.pathname.match(/^\/(?:embed|shorts|live)\/([^/?#]+)/i) || [])[1] || '';
+    }
+    if (videoId) return { kind: 'iframe', src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0` };
+    if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+      const vimeoId = (parsed.pathname.match(/(?:video\/)?(\d+)/) || [])[1] || '';
+      if (vimeoId) return { kind: 'iframe', src: `https://player.vimeo.com/video/${vimeoId}` };
+    }
+    if (/\.(?:mp4|webm|ogv|ogg|m3u8)(?:$|[?#])/i.test(parsed.pathname + parsed.search)) return { kind: 'native', src: parsed.href };
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function renderVideoPlayer(item) {
+  const source = getVideoSource(item.url);
+  if (!source) return '';
+  if (source.kind === 'iframe') {
+    return `<div class="media-thumb media-player media-player-frame"><iframe src="${escapeHtml(source.src)}" title="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+  }
+  const poster = isHttpsUrl(item.thumbnail || '') ? ` poster="${escapeHtml(item.thumbnail)}"` : '';
+  return `<div class="media-thumb media-player"><video controls playsinline preload="metadata"${poster}><source src="${escapeHtml(source.src)}">您的瀏覽器不支援 HTML5 影片播放。</video></div>`;
+}
+
 function setConnectionState(live) {
   const el = $('#connectionState');
   el.classList.toggle('connected', live);
@@ -125,9 +158,10 @@ function renderMedia() {
     const link = videoUrl ? `<a class="watch-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : '';
     const thumbnail = item.thumbnail || getYouTubeThumbnail(item.url);
     const thumbnailImage = `<img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(item.title)} 的縮圖" loading="lazy" onerror="this.closest('.media-thumb').hidden=true" />`;
-    const thumbnailMarkup = thumbnail ? (videoUrl
+    const playerMarkup = renderVideoPlayer(item);
+    const thumbnailMarkup = playerMarkup || (thumbnail ? (videoUrl
       ? `<a class="media-thumb media-thumb-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer" aria-label="開啟影音：${escapeHtml(item.title)}">${thumbnailImage}</a>`
-      : `<div class="media-thumb">${thumbnailImage}</div>`) : '';
+      : `<div class="media-thumb">${thumbnailImage}</div>`) : '');
     const adminButtons = state.isAdmin ? `<button class="card-edit" type="button" data-edit-media="${escapeHtml(item.id)}" aria-label="修改影音：${escapeHtml(item.title)}">修改</button><button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
     return `<article class="media-card">
       <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
