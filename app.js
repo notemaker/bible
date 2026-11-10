@@ -12,6 +12,9 @@ const DEMO_MEDIA = [
   { id: 'demo-4', title: '聽見真理，也活出真理', url: 'https://www.youtube.com/results?search_query=聽見真理+活出真理+講道', type: '主日講道', description: '真理不只停留在理解，也邀請我們用選擇與行動回應。', createdAt: '2026-10-09', createdBy: '示範資料' }
 ];
 
+const FEATURED_TYPE_ORDER = ['內容架構', '晨興綱要', '晨興內容', '聖經背誦'];
+const FEATURED_TYPE_ALIASES = { 晨興網要: '晨興綱要' };
+
 const CONFIG_KEY = 'bible-truth-config';
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
@@ -97,6 +100,11 @@ function normalizedTypeName(value) {
   return String(value || '').replace(/[\s\u200B-\u200D\uFEFF]+/g, '').trim();
 }
 
+function featuredTypeName(value) {
+  const type = normalizedTypeName(value);
+  return FEATURED_TYPE_ALIASES[type] || type;
+}
+
 function isHttpsUrl(value) {
   try {
     return new URL(value).protocol === 'https:';
@@ -164,8 +172,11 @@ function renderTypeManagement() {
 function getFeaturedMedia() {
   const today = state.todayKey || todayDateKey();
   return state.media
-    .filter((item) => normalizedTypeName(item.type) === '內容架構' && dateKey(item.createdAt) === today)
-    .sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
+    .filter((item) => FEATURED_TYPE_ORDER.includes(featuredTypeName(item.type)) && dateKey(item.createdAt) === today)
+    .sort((a, b) => {
+      const typeOrder = FEATURED_TYPE_ORDER.indexOf(featuredTypeName(a.type)) - FEATURED_TYPE_ORDER.indexOf(featuredTypeName(b.type));
+      return typeOrder || timestampValue(b.createdAt) - timestampValue(a.createdAt);
+    });
 }
 
 function renderMediaCard(item, extraClass = '') {
@@ -192,7 +203,7 @@ function renderFeaturedMedia() {
   $('#featuredCount').textContent = `${featured.length} 部影音`;
   $('#featuredMediaGrid').innerHTML = featured.length
     ? featured.map((item) => renderMediaCard(item, 'featured-card')).join('')
-    : '<div class="featured-empty"><strong>今天尚無「內容架構」影片</strong><span>當日新增且標註為「內容架構」的影音會顯示在這裡。</span></div>';
+    : '<div class="featured-empty"><strong>今天尚無符合條件的精選影片</strong><span>當日新增且類型為「內容架構」、「晨興綱要」、「晨興內容」或「聖經背誦」的影音會顯示在這裡。</span></div>';
 }
 
 function renderMedia() {
