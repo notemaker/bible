@@ -282,14 +282,15 @@ async function handleUpload(event) {
 
 function openViewer(photoId) {
   const photo = state.photos.find((item) => String(item.id) === String(photoId));
-  if (!photo || !isHttpsUrl(photo.driveUrl)) return;
+  const viewerUrl = photo?.viewerUrl || photo?.driveUrl;
+  if (!photo || !isHttpsUrl(viewerUrl)) return;
   state.viewerPhoto = photo;
   state.zoom = 1;
-  $('#viewerImage').src = photo.driveUrl;
+  $('#viewerImage').src = viewerUrl;
   $('#viewerImage').alt = photo.title || '照片';
   $('#viewerTitle').textContent = photo.title || '未命名照片';
   $('#viewerDescription').textContent = photo.description || '';
-  $('#downloadPhotoButton').href = `${photo.driveUrl}${photo.driveUrl.includes('?') ? '&' : '?'}export=download`;
+  $('#downloadPhotoButton').href = photo.downloadUrl || `${photo.driveUrl}${photo.driveUrl.includes('?') ? '&' : '?'}export=download`;
   $('#downloadPhotoButton').download = `${photo.title || 'photo'}.jpg`;
   updateZoom();
   $('#photoViewer').hidden = false;
