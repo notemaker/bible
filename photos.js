@@ -165,7 +165,7 @@ function renderPhotos() {
   $('#photoGrid').innerHTML = state.photos.map((photo) => {
     const imageUrl = isHttpsUrl(photo.thumbnailUrl) ? escapeHtml(photo.thumbnailUrl) : '';
     const fallbackUrl = isHttpsUrl(photo.driveUrl) ? escapeHtml(photo.driveUrl) : '';
-    const adminActions = state.isAdmin ? `<div class="photo-card-actions"><button type="button" data-delete-photo="${escapeHtml(photo.id)}">刪除</button></div>` : '';
+    const adminActions = state.isAdmin ? `<div class="photo-card-actions"><button type="button" data-delete-photo="${escapeHtml(photo.id)}" aria-label="刪除照片：${escapeHtml(photo.title || '未命名照片')}">刪除照片</button></div>` : '';
     return `<article class="photo-card" data-view-photo="${escapeHtml(photo.id)}"><div class="photo-card-image"><img src="${imageUrl || fallbackUrl}" alt="${escapeHtml(photo.title)}" loading="lazy" onerror="this.closest('.photo-card-image').classList.add('image-failed')" /></div><div class="photo-card-info"><h2>${escapeHtml(photo.title || '未命名照片')}</h2><p>${escapeHtml(photo.description || '')}</p><time datetime="${escapeHtml(photo.createdAt)}">${escapeHtml(formatPhotoDate(photo.createdAt))}</time>${adminActions}</div></article>`;
   }).join('');
 }
