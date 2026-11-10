@@ -30,6 +30,7 @@ const state = {
   isAdmin: false,
   user: null,
   credential: null,
+  todayKey: null,
   modal: null,
   editingMediaId: null,
   editingTypeId: null,
@@ -90,6 +91,10 @@ function dateKey(value, timeZone = 'Asia/Taipei') {
 
 function todayDateKey() {
   return dateKey(new Date());
+}
+
+function normalizedTypeName(value) {
+  return String(value || '').replace(/[\s\u200B-\u200D\uFEFF]+/g, '').trim();
 }
 
 function isHttpsUrl(value) {
@@ -157,9 +162,9 @@ function renderTypeManagement() {
 }
 
 function getFeaturedMedia() {
-  const today = todayDateKey();
+  const today = state.todayKey || todayDateKey();
   return state.media
-    .filter((item) => String(item.type || '').trim() === '內容架構' && dateKey(item.createdAt) === today)
+    .filter((item) => normalizedTypeName(item.type) === '內容架構' && dateKey(item.createdAt) === today)
     .sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
 }
 
@@ -350,9 +355,11 @@ async function loadLiveData() {
     if (!result?.ok) throw new Error(result?.error || '資料讀取失敗。');
     state.media = Array.isArray(result.media) ? result.media : [];
     state.types = Array.isArray(result.types) && result.types.length ? result.types : [...DEMO_TYPES];
+    state.todayKey = result.today || todayDateKey();
     state.isLive = true;
     render();
   } catch (error) {
+    state.todayKey = null;
     state.isLive = false;
     render();
     showToast(error.message || '目前先使用示範資料。');
@@ -379,6 +386,7 @@ async function saveConnectionSettings() {
 
 function enterDemoAdmin() {
   state.isLive = false;
+  state.todayKey = null;
   state.isAdmin = true;
   state.user = { displayName: '示範管理者', email: 'demo@local.preview' };
   state.credential = 'demo-credential';
