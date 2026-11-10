@@ -174,7 +174,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .photo-viewer-backdrop { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; padding: 30px; background: rgba(7, 10, 8, 0.88); }
 .photo-viewer-close { position: fixed; z-index: 41; top: 18px; right: 24px; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 50%; color: var(--ink); background: rgba(32, 38, 34, 0.9); font-size: 26px; line-height: 1; }
 .photo-viewer-content { display: grid; gap: 13px; width: min(100%, 1100px); max-height: calc(100vh - 60px); margin: 0; }
-.photo-viewer-content img { display: block; width: 100%; max-height: calc(100vh - 160px); object-fit: contain; }
+.photo-viewer-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
+.photo-viewer-tool, .photo-viewer-download { min-width: 38px; height: 34px; padding: 0 10px; border: 1px solid #52635a; border-radius: 3px; color: var(--ink); background: rgba(32, 38, 34, 0.96); font-size: 12px; text-decoration: none; }
+.photo-viewer-tool { cursor: pointer; }
+.photo-viewer-tool:hover, .photo-viewer-download:hover { border-color: var(--sage-deep); background: #2b3930; }
+.photo-viewer-zoom { min-width: 52px; color: var(--ink-soft); font-size: 11px; text-align: center; }
+.photo-viewer-reset { margin-left: 5px; }
+.photo-viewer-download { display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; background: var(--action); }
+.photo-viewer-image-frame { overflow: auto; display: grid; place-items: center; min-height: 180px; max-height: calc(100vh - 190px); background: rgba(0, 0, 0, 0.2); }
+.photo-viewer-content img { display: block; width: auto; max-width: 100%; max-height: calc(100vh - 210px); object-fit: contain; transform: scale(1); transform-origin: center center; transition: transform 160ms ease; }
 .photo-viewer-content figcaption { display: flex; flex-direction: column; gap: 4px; color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
 .photo-viewer-content figcaption strong { color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 17px; }
 body.viewer-open { overflow: hidden; }

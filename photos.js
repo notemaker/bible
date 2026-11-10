@@ -20,6 +20,8 @@ const state = {
   credential: null,
   loginOpen: false,
   uploadOpen: false,
+  viewerPhoto: null,
+  zoom: 1,
   toastTimer: null
 };
 
@@ -281,17 +283,36 @@ async function handleUpload(event) {
 function openViewer(photoId) {
   const photo = state.photos.find((item) => String(item.id) === String(photoId));
   if (!photo || !isHttpsUrl(photo.driveUrl)) return;
+  state.viewerPhoto = photo;
+  state.zoom = 1;
   $('#viewerImage').src = photo.driveUrl;
   $('#viewerImage').alt = photo.title || '照片';
   $('#viewerTitle').textContent = photo.title || '未命名照片';
   $('#viewerDescription').textContent = photo.description || '';
+  $('#downloadPhotoButton').href = `${photo.driveUrl}${photo.driveUrl.includes('?') ? '&' : '?'}export=download`;
+  $('#downloadPhotoButton').download = `${photo.title || 'photo'}.jpg`;
+  updateZoom();
   $('#photoViewer').hidden = false;
   document.body.classList.add('viewer-open');
+}
+
+function updateZoom() {
+  const zoom = Math.round(state.zoom * 100);
+  $('#viewerImage').style.transform = `scale(${state.zoom})`;
+  $('#zoomLevel').textContent = `${zoom}%`;
+}
+
+function setZoom(value) {
+  state.zoom = Math.min(3, Math.max(1, Number(value) || 1));
+  updateZoom();
 }
 
 function closeViewer() {
   $('#photoViewer').hidden = true;
   $('#viewerImage').src = '';
+  $('#downloadPhotoButton').href = '#';
+  state.viewerPhoto = null;
+  state.zoom = 1;
   document.body.classList.remove('viewer-open');
 }
 
@@ -320,6 +341,14 @@ function wireEvents() {
     if (card) openViewer(card.dataset.viewPhoto);
   });
   $('#closeViewerButton').addEventListener('click', closeViewer);
+  $('#zoomInButton').addEventListener('click', () => setZoom(state.zoom + 0.25));
+  $('#zoomOutButton').addEventListener('click', () => setZoom(state.zoom - 0.25));
+  $('#resetZoomButton').addEventListener('click', () => setZoom(1));
+  $('#viewerImageFrame').addEventListener('wheel', (event) => {
+    if (!state.viewerPhoto) return;
+    event.preventDefault();
+    setZoom(state.zoom + (event.deltaY < 0 ? 0.1 : -0.1));
+  }, { passive: false });
   $('#photoViewer').addEventListener('click', (event) => { if (event.target.id === 'photoViewer') closeViewer(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeViewer(); if (state.loginOpen) { state.loginOpen = false; renderAdminState(); } } });
 }
