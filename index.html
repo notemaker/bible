@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20261110-7" />
-    <script src="./app.js?v=20261110-6" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20261110-8" />
+    <script src="./app.js?v=20261110-8" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -134,6 +134,13 @@
           <p class="section-label">現有影音類型</p>
           <div id="typeList" class="type-list" aria-live="polite"></div>
         </div>
+      </div>
+
+      <div id="playerModal" class="modal player-modal" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle" hidden>
+        <button class="modal-close" data-close-modal aria-label="關閉播放器">×</button>
+        <p class="eyebrow accent">NOW PLAYING</p>
+        <h2 id="playerModalTitle">影片播放</h2>
+        <div id="playerContent" class="floating-player"></div>
       </div>
     </div>
 

@@ -181,21 +181,42 @@ function getFeaturedMedia() {
 
 function renderMediaCard(item, extraClass = '') {
   const videoUrl = isHttpsUrl(item.url) ? escapeHtml(item.url) : '';
-  const link = videoUrl ? `<a class="watch-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : '';
+  const link = videoUrl ? (extraClass ? `<a class="watch-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : `<button class="watch-link card-play" type="button" data-play-media="${escapeHtml(item.id)}">播放</button>`) : '';
   const thumbnail = item.thumbnail || getYouTubeThumbnail(item.url);
   const thumbnailImage = `<img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(item.title)} 的縮圖" loading="lazy" onerror="this.closest('.media-thumb').hidden=true" />`;
-  const playerMarkup = renderVideoPlayer(item);
-  const thumbnailMarkup = playerMarkup || (thumbnail ? (videoUrl
+  const playerMarkup = extraClass ? renderVideoPlayer(item) : '';
+  const thumbnailMarkup = playerMarkup || (thumbnail ? (videoUrl && extraClass
     ? `<a class="media-thumb media-thumb-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer" aria-label="開啟影音：${escapeHtml(item.title)}">${thumbnailImage}</a>`
     : `<div class="media-thumb">${thumbnailImage}</div>`) : '');
   const adminButtons = state.isAdmin ? `<button class="card-edit" type="button" data-edit-media="${escapeHtml(item.id)}" aria-label="修改影音：${escapeHtml(item.title)}">修改</button><button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
-  return `<article class="media-card${extraClass ? ` ${extraClass}` : ''}">
+  const rowAttributes = extraClass ? '' : ` data-open-player="${escapeHtml(item.id)}" tabindex="0" role="button" aria-label="播放影片：${escapeHtml(item.title)}"`;
+  return `<article class="media-card${extraClass ? ` ${extraClass}` : ''}"${rowAttributes}>
     <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
     ${thumbnailMarkup}
     <h3>${escapeHtml(item.title)}</h3>
     <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
     <div class="card-footer"><div class="card-admin-actions">${adminButtons}</div>${link}</div>
   </article>`;
+}
+
+function openMediaPlayer(mediaId) {
+  const item = state.media.find((media) => String(media.id) === String(mediaId));
+  if (!item) return;
+  const source = getVideoSource(item.url);
+  if (!source) {
+    showToast('這個影音網址目前無法在本站內嵌播放。');
+    return;
+  }
+  const content = $('#playerContent');
+  $('#playerModalTitle').textContent = item.title || '影片播放';
+  if (source.kind === 'iframe') {
+    const separator = source.src.includes('?') ? '&' : '?';
+    content.innerHTML = `<iframe src="${escapeHtml(`${source.src}${separator}autoplay=1`)}" title="${escapeHtml(item.title)}" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+  } else {
+    const poster = isHttpsUrl(item.thumbnail || '') ? ` poster="${escapeHtml(item.thumbnail)}"` : '';
+    content.innerHTML = `<video controls autoplay playsinline${poster}><source src="${escapeHtml(source.src)}">您的瀏覽器不支援 HTML5 影片播放。</video>`;
+  }
+  openModal('player');
 }
 
 function renderFeaturedMedia() {
@@ -259,6 +280,8 @@ function closeModal() {
   state.modal = null;
   $('#modalBackdrop').hidden = true;
   $$('.modal').forEach((modal) => { modal.hidden = true; });
+  const playerContent = $('#playerContent');
+  if (playerContent) playerContent.innerHTML = '';
 }
 
 function updateLoginMessage(message, tone = 'error') {
@@ -740,6 +763,12 @@ function wireEvents() {
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
   const handleMediaGridClick = (event) => {
+    const playButton = event.target.closest('[data-play-media]');
+    if (playButton) {
+      event.stopPropagation();
+      openMediaPlayer(playButton.dataset.playMedia);
+      return;
+    }
     const editButton = event.target.closest('[data-edit-media]');
     if (editButton) {
       openEditMediaModal(editButton.dataset.editMedia);
@@ -747,8 +776,16 @@ function wireEvents() {
     }
     const button = event.target.closest('[data-delete-media]');
     if (button) handleMediaDelete(button.dataset.deleteMedia, button);
+    const card = event.target.closest('[data-open-player]');
+    if (card && !event.target.closest('button, a, input, select, textarea')) openMediaPlayer(card.dataset.openPlayer);
   };
   $('#mediaGrid').addEventListener('click', handleMediaGridClick);
+  $('#mediaGrid').addEventListener('keydown', (event) => {
+    if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-open-player]')) {
+      event.preventDefault();
+      openMediaPlayer(event.target.closest('[data-open-player]').dataset.openPlayer);
+    }
+  });
   $('#featuredMediaGrid').addEventListener('click', handleMediaGridClick);
   $('#typeList').addEventListener('click', (event) => {
     const editButton = event.target.closest('[data-edit-type]');
