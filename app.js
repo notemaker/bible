@@ -22,8 +22,8 @@ const DEFAULT_CONFIG = {
   googleClientId: '736171088462-ias9uqmm9j7crschd80ddj0je2mf8a2k.apps.googleusercontent.com'
 };
 const state = {
-  media: [...DEMO_MEDIA],
-  types: [...DEMO_TYPES],
+  media: [],
+  types: [],
   filteredMedia: [],
   config: loadConfig(),
   isLive: false,
@@ -141,8 +141,8 @@ function renderVideoPlayer(item) {
 function setConnectionState(live) {
   const el = $('#connectionState');
   el.classList.toggle('connected', live);
-  el.innerHTML = `<span class="status-dot"></span>${live ? '已連線 Google 試算表' : '示範資料'}`;
-  $('#demoNotice').hidden = live;
+  el.innerHTML = `<span class="status-dot"></span>${live ? '已連線 Google 試算表' : '連線中…'}`;
+  $('#demoNotice').hidden = true;
 }
 
 function renderTypeOptions() {
@@ -196,16 +196,14 @@ function renderFeaturedMedia() {
 }
 
 function renderMedia() {
-  const query = state.search.trim().toLowerCase();
   state.filteredMedia = state.media.filter((item) => {
     const inType = state.type === 'all' || item.type === state.type;
-    const haystack = `${item.title} ${item.description} ${item.type}`.toLowerCase();
-    return inType && (!query || haystack.includes(query));
+    return inType;
   }).sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
   $('#collectionCount').textContent = `${state.filteredMedia.length} 部影音`;
   const grid = $('#mediaGrid');
   if (!state.filteredMedia.length) {
-    grid.innerHTML = `<div class="empty-state"><strong>還沒有符合條件的影音</strong><span>${state.media.length ? '換個搜尋字詞或清除影音類型篩選。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
+    grid.innerHTML = `<div class="empty-state"><strong>還沒有符合條件的影音</strong><span>${state.media.length ? '請清除影音類型篩選。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
     return;
   }
   grid.innerHTML = state.filteredMedia.map((item) => renderMediaCard(item)).join('');
@@ -315,7 +313,7 @@ window.handleGoogleCredential = async function handleGoogleCredential(response) 
   }
 };
 
-function jsonp(params) {
+function jsonp(params, endpoint = state.config.appsScriptUrl) {
   return new Promise((resolve, reject) => {
     const callbackName = `__bibleTruth_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const script = document.createElement('script');
@@ -323,7 +321,7 @@ function jsonp(params) {
     const timer = setTimeout(() => { cleanup(); reject(new Error('連線逾時，請檢查 Apps Script 網址。')); }, 10000);
     const cleanup = () => { clearTimeout(timer); delete window[callbackName]; script.remove(); };
     window[callbackName] = (payload) => { cleanup(); resolve(payload); };
-    script.src = `${state.config.appsScriptUrl.replace(/\/$/, '')}?${query.toString()}`;
+    script.src = `${endpoint.replace(/\/$/, '')}?${query.toString()}`;
     script.onerror = () => { cleanup(); reject(new Error('無法讀取 Google 試算表。')); };
     document.body.appendChild(script);
   });
@@ -349,20 +347,23 @@ async function submitAndWait(payload, allowEndpointRecovery = true) {
 }
 
 async function loadLiveData() {
-  if (!state.config.appsScriptUrl) return;
   try {
-    const result = await jsonp({ action: 'list' });
+    const result = await jsonp({ action: 'list' }, DEFAULT_CONFIG.appsScriptUrl);
     if (!result?.ok) throw new Error(result?.error || '資料讀取失敗。');
     state.media = Array.isArray(result.media) ? result.media : [];
-    state.types = Array.isArray(result.types) && result.types.length ? result.types : [...DEMO_TYPES];
+    state.types = Array.isArray(result.types) ? result.types : [];
     state.todayKey = result.today || todayDateKey();
+    state.config.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
+    saveConfig();
     state.isLive = true;
     render();
   } catch (error) {
+    state.media = [];
+    state.types = [];
     state.todayKey = null;
     state.isLive = false;
     render();
-    showToast(error.message || '目前先使用示範資料。');
+    showToast(error.message || '無法讀取 Google 試算表資料。');
   }
 }
 
@@ -726,7 +727,6 @@ function wireEvents() {
   $('#addTypeButton').addEventListener('click', openTypeModal);
   $('#saveSettingsButton').addEventListener('click', saveConnectionSettings);
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
-  $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
   const handleMediaGridClick = (event) => {
     const editButton = event.target.closest('[data-edit-media]');
