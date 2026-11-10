@@ -149,7 +149,7 @@ function renderVideoPlayer(item) {
 function setConnectionState(live) {
   const el = $('#connectionState');
   el.classList.toggle('connected', live);
-  el.innerHTML = `<span class="status-dot"></span>${live ? '已連線 Google 試算表' : '連線中…'}`;
+  el.innerHTML = `<span class="status-dot"></span>${live ? '已連線' : '連線中…'}`;
   $('#demoNotice').hidden = true;
 }
 
