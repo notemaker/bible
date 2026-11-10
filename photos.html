@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="集集召會生活照片集：公開瀏覽已核准照片，管理者可上傳照片。" />
+    <title>照片｜集集召會生活</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css?v=20261110-10" />
+    <script src="./photos.js?v=20261110-1" defer></script>
+  </head>
+  <body class="photos-page">
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="回到集集召會生活首頁">
+          <img class="brand-mark" src="/manus-storage/church-logo_2bdca3e7.webp" data-fallback="./assets/church-logo.webp" onerror="if (this.dataset.fallback) { this.src = this.dataset.fallback; delete this.dataset.fallback; }" alt="" aria-hidden="true" />
+          <span class="brand-text">
+            <span class="eyebrow">PHOTO ARCHIVE</span>
+            <strong>集集召會生活</strong>
+          </span>
+        </a>
+        <div class="top-actions">
+          <span id="connectionState" class="status-pill"><span class="status-dot"></span>連線中…</span>
+          <a class="button button-quiet" href="./">影音首頁</a>
+          <button id="loginButton" class="button button-quiet" type="button">管理者登入</button>
+          <div id="adminActions" class="admin-actions" hidden>
+            <span id="adminName" class="admin-name"></span>
+            <button id="logoutButton" class="button button-quiet" type="button">登出</button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="photo-page-heading">
+          <div>
+            <h1>照片集</h1>
+            <p>保存集集召會生活中的活動照片，公開瀏覽已核准的影像紀錄。</p>
+          </div>
+          <div class="photo-heading-actions">
+            <span id="photoCount" class="featured-count">0 張照片</span>
+            <button id="addPhotoButton" class="button button-primary admin-only" type="button" hidden>＋ 新增照片</button>
+          </div>
+        </section>
+
+        <section id="loginPanel" class="photo-login-panel" hidden>
+          <div>
+            <strong>管理者登入</strong>
+            <p>登入後才能上傳、修改或刪除照片。</p>
+          </div>
+          <div id="googleSignInButton" class="google-sign-in"></div>
+          <div id="loginMessage" class="inline-message" role="status"></div>
+        </section>
+
+        <section id="photoUploadPanel" class="photo-upload-panel" hidden>
+          <div class="section-heading-row">
+            <div>
+              <p class="section-label">MANAGER UPLOAD</p>
+              <h2>新增照片</h2>
+            </div>
+            <button id="closeUploadButton" class="button button-quiet" type="button">收起</button>
+          </div>
+          <form id="photoForm" class="photo-form">
+            <label>照片檔案<span class="required">*</span><input id="photoFileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple required /><span class="helper-text">單次最多 5 張；每張不超過 10 MB，送出前會自動縮小。</span></label>
+            <label>照片標題<input id="photoTitleInput" type="text" maxlength="120" placeholder="可留白，留白時使用檔案名稱" /></label>
+            <label>照片說明<textarea id="photoDescriptionInput" rows="3" maxlength="300" placeholder="可填寫聚會、活動或照片內容說明"></textarea></label>
+            <div id="photoPreview" class="photo-upload-preview" aria-live="polite"></div>
+            <div class="photo-form-actions"><span id="uploadStatus" class="helper-text" role="status"></span><button id="uploadPhotoButton" class="button button-primary" type="submit">上傳照片</button></div>
+          </form>
+        </section>
+
+        <section id="photoGrid" class="photo-grid" aria-live="polite"></section>
+        <div class="photo-load-more-wrap"><button id="loadMoreButton" class="button button-outline" type="button" hidden>載入更多照片</button></div>
+      </main>
+
+      <footer class="footer">
+        <span>公開瀏覽 · 管理者才可寫入</span>
+        <span>集集召會生活照片集</span>
+      </footer>
+    </div>
+
+    <div id="photoViewer" class="photo-viewer-backdrop" hidden>
+      <button id="closeViewerButton" class="photo-viewer-close" type="button" aria-label="關閉照片檢視器">×</button>
+      <figure class="photo-viewer-content">
+        <img id="viewerImage" src="" alt="" />
+        <figcaption><strong id="viewerTitle"></strong><span id="viewerDescription"></span></figcaption>
+      </figure>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
