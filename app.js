@@ -1,7 +1,8 @@
 const DEMO_TYPES = [
   { id: 'type-1', name: '主日講道' },
   { id: 'type-2', name: '查經分享' },
-  { id: 'type-3', name: '信仰見證' }
+  { id: 'type-3', name: '信仰見證' },
+  { id: 'type-4', name: '內容架構' }
 ];
 
 const DEMO_MEDIA = [
@@ -76,6 +77,21 @@ function timestampValue(value) {
   return dateOnly ? Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])) : 0;
 }
 
+function dateKey(value, timeZone = 'Asia/Taipei') {
+  const raw = String(value || '').trim();
+  const dateOnly = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (dateOnly) return `${dateOnly[1]}-${String(dateOnly[2]).padStart(2, '0')}-${String(dateOnly[3]).padStart(2, '0')}`;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]));
+  return values.year && values.month && values.day ? `${values.year}-${values.month}-${values.day}` : '';
+}
+
+function todayDateKey() {
+  return dateKey(new Date());
+}
+
 function isHttpsUrl(value) {
   try {
     return new URL(value).protocol === 'https:';
@@ -140,6 +156,40 @@ function renderTypeManagement() {
   list.innerHTML = state.types.length ? state.types.map((type) => `<div class="type-row"><span>${escapeHtml(type.name)}</span><span class="type-row-actions"><button class="type-edit" type="button" data-edit-type="${escapeHtml(type.id)}" aria-label="修改影音類型：${escapeHtml(type.name)}">修改</button><button class="type-delete" type="button" data-delete-type="${escapeHtml(type.id)}" aria-label="刪除影音類型：${escapeHtml(type.name)}">刪除</button></span></div>`).join('') : '<p class="helper-text">目前沒有影音類型。</p>';
 }
 
+function getFeaturedMedia() {
+  const today = todayDateKey();
+  return state.media
+    .filter((item) => String(item.type || '').trim() === '內容架構' && dateKey(item.createdAt) === today)
+    .sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
+}
+
+function renderMediaCard(item, extraClass = '') {
+  const videoUrl = isHttpsUrl(item.url) ? escapeHtml(item.url) : '';
+  const link = videoUrl ? `<a class="watch-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : '';
+  const thumbnail = item.thumbnail || getYouTubeThumbnail(item.url);
+  const thumbnailImage = `<img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(item.title)} 的縮圖" loading="lazy" onerror="this.closest('.media-thumb').hidden=true" />`;
+  const playerMarkup = renderVideoPlayer(item);
+  const thumbnailMarkup = playerMarkup || (thumbnail ? (videoUrl
+    ? `<a class="media-thumb media-thumb-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer" aria-label="開啟影音：${escapeHtml(item.title)}">${thumbnailImage}</a>`
+    : `<div class="media-thumb">${thumbnailImage}</div>`) : '');
+  const adminButtons = state.isAdmin ? `<button class="card-edit" type="button" data-edit-media="${escapeHtml(item.id)}" aria-label="修改影音：${escapeHtml(item.title)}">修改</button><button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
+  return `<article class="media-card${extraClass ? ` ${extraClass}` : ''}">
+    <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
+    ${thumbnailMarkup}
+    <h3>${escapeHtml(item.title)}</h3>
+    <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
+    <div class="card-footer"><div class="card-admin-actions">${adminButtons}</div>${link}</div>
+  </article>`;
+}
+
+function renderFeaturedMedia() {
+  const featured = getFeaturedMedia();
+  $('#featuredCount').textContent = `${featured.length} 部影音`;
+  $('#featuredMediaGrid').innerHTML = featured.length
+    ? featured.map((item) => renderMediaCard(item, 'featured-card')).join('')
+    : '<div class="featured-empty"><strong>今天尚無「內容架構」影片</strong><span>當日新增且標註為「內容架構」的影音會顯示在這裡。</span></div>';
+}
+
 function renderMedia() {
   const query = state.search.trim().toLowerCase();
   state.filteredMedia = state.media.filter((item) => {
@@ -153,24 +203,7 @@ function renderMedia() {
     grid.innerHTML = `<div class="empty-state"><strong>還沒有符合條件的影音</strong><span>${state.media.length ? '換個搜尋字詞或清除影音類型篩選。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
     return;
   }
-  grid.innerHTML = state.filteredMedia.map((item) => {
-    const videoUrl = isHttpsUrl(item.url) ? escapeHtml(item.url) : '';
-    const link = videoUrl ? `<a class="watch-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer">開啟影音</a>` : '';
-    const thumbnail = item.thumbnail || getYouTubeThumbnail(item.url);
-    const thumbnailImage = `<img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(item.title)} 的縮圖" loading="lazy" onerror="this.closest('.media-thumb').hidden=true" />`;
-    const playerMarkup = renderVideoPlayer(item);
-    const thumbnailMarkup = playerMarkup || (thumbnail ? (videoUrl
-      ? `<a class="media-thumb media-thumb-link" href="${videoUrl}" target="_blank" rel="noopener noreferrer" aria-label="開啟影音：${escapeHtml(item.title)}">${thumbnailImage}</a>`
-      : `<div class="media-thumb">${thumbnailImage}</div>`) : '');
-    const adminButtons = state.isAdmin ? `<button class="card-edit" type="button" data-edit-media="${escapeHtml(item.id)}" aria-label="修改影音：${escapeHtml(item.title)}">修改</button><button class="card-delete" type="button" data-delete-media="${escapeHtml(item.id)}" aria-label="刪除收藏：${escapeHtml(item.title)}">刪除</button>` : '';
-    return `<article class="media-card">
-      <div class="card-topline"><span class="type-tag">${escapeHtml(item.type || '未分類')}</span><span class="card-date">${formatDate(item.createdAt)}</span></div>
-      ${thumbnailMarkup}
-      <h3>${escapeHtml(item.title)}</h3>
-      <p>${escapeHtml(item.description || '這段影音尚未加上說明。')}</p>
-      <div class="card-footer"><div class="card-admin-actions">${adminButtons}</div>${link}</div>
-    </article>`;
-  }).join('');
+  grid.innerHTML = state.filteredMedia.map((item) => renderMediaCard(item)).join('');
 }
 
 function renderAdminState() {
@@ -182,6 +215,7 @@ function renderAdminState() {
 
 function render() {
   renderTypeOptions();
+  renderFeaturedMedia();
   renderMedia();
   renderAdminState();
   setConnectionState(state.isLive);
@@ -586,6 +620,7 @@ async function handleMediaDelete(mediaId, button) {
       if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音刪除失敗。');
     }
     state.media = state.media.filter((media) => String(media.id) !== String(mediaId));
+    renderFeaturedMedia();
     renderMedia();
     showToast(state.isLive ? '影音已從 Google 試算表刪除。' : '影音已從示範收藏清單移除。');
   } catch (error) {
@@ -685,7 +720,7 @@ function wireEvents() {
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#searchInput').addEventListener('input', (event) => { state.search = event.target.value; renderMedia(); });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
-  $('#mediaGrid').addEventListener('click', (event) => {
+  const handleMediaGridClick = (event) => {
     const editButton = event.target.closest('[data-edit-media]');
     if (editButton) {
       openEditMediaModal(editButton.dataset.editMedia);
@@ -693,7 +728,9 @@ function wireEvents() {
     }
     const button = event.target.closest('[data-delete-media]');
     if (button) handleMediaDelete(button.dataset.deleteMedia, button);
-  });
+  };
+  $('#mediaGrid').addEventListener('click', handleMediaGridClick);
+  $('#featuredMediaGrid').addEventListener('click', handleMediaGridClick);
   $('#typeList').addEventListener('click', (event) => {
     const editButton = event.target.closest('[data-edit-type]');
     if (editButton) {

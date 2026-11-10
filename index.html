@@ -50,6 +50,23 @@
           <button id="addTypeButton" class="button button-outline admin-only" type="button" hidden>＋ 新增類型</button>
         </section>
 
+        <div id="demoNotice" class="demo-notice" role="status">
+          <span class="notice-icon">i</span>
+          <span>目前為示範模式。管理者連線後，影音與影音類型會從 Google 試算表讀取。</span>
+          <button id="openSettingsButton" class="text-button" type="button">連線設定</button>
+        </div>
+
+        <section class="featured-section" aria-labelledby="featuredTitle">
+          <div class="featured-heading">
+            <div>
+              <p class="eyebrow accent">TODAY'S SELECTION</p>
+              <h2 id="featuredTitle">本日精選</h2>
+            </div>
+            <span id="featuredCount" class="featured-count">0 部影音</span>
+          </div>
+          <div id="featuredMediaGrid" class="media-list featured-list" aria-live="polite"></div>
+        </section>
+
         <section class="collection-header">
           <div>
             <p class="eyebrow">YOUR SHELF</p>
@@ -60,12 +77,6 @@
             <button id="addMediaButton" class="button button-primary admin-only" type="button" hidden>＋ 新增影音</button>
           </div>
         </section>
-
-        <div id="demoNotice" class="demo-notice" role="status">
-          <span class="notice-icon">i</span>
-          <span>目前為示範模式。管理者連線後，影音與影音類型會從 Google 試算表讀取。</span>
-          <button id="openSettingsButton" class="text-button" type="button">連線設定</button>
-        </div>
 
         <section id="mediaGrid" class="media-list" aria-live="polite"></section>
       </main>
