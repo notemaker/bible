@@ -153,6 +153,7 @@ function renderAdminState() {
   $('#addPhotoButton').hidden = !state.isAdmin;
   $('#photoUploadPanel').hidden = !state.isAdmin || !state.uploadOpen;
   $('#loginPanel').hidden = !state.loginOpen || state.isAdmin;
+  renderPhotos();
 }
 
 function renderPhotos() {
