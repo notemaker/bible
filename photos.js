@@ -8,6 +8,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_IMAGE_EDGE = 1600;
 const THUMB_IMAGE_EDGE = 480;
 const PHOTO_CONFIG_KEY = 'bible-truth-config';
+const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
 
 const state = {
   config: loadPhotoConfig(),
@@ -33,6 +34,23 @@ function loadPhotoConfig() {
     return { ...PHOTO_CONFIG, googleClientId: saved.googleClientId || PHOTO_CONFIG.googleClientId, appsScriptUrl: PHOTO_CONFIG.appsScriptUrl };
   } catch {
     return { ...PHOTO_CONFIG };
+  }
+}
+
+function saveAdminSession() {
+  if (state.isAdmin && state.credential) sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ credential: state.credential, user: state.user }));
+}
+
+function restoreAdminSession() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(ADMIN_SESSION_KEY) || 'null');
+    if (saved?.credential && saved?.user) {
+      state.credential = saved.credential;
+      state.user = saved.user;
+      state.isAdmin = true;
+    }
+  } catch {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
   }
 }
 
@@ -126,6 +144,7 @@ async function handleGoogleCredential(response) {
     if (!receipt?.result?.ok || !receipt.result.isAdmin) throw new Error(receipt?.result?.error || '此 Google 帳號尚未被加入管理者名單。');
     state.user = receipt.result;
     state.isAdmin = true;
+    saveAdminSession();
     state.loginOpen = false;
     renderAdminState();
     showToast(`已登入：${state.user.displayName || state.user.email}`);
@@ -140,6 +159,7 @@ function logout() {
   state.isAdmin = false;
   state.user = null;
   state.credential = null;
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
   state.uploadOpen = false;
   state.loginOpen = false;
   renderAdminState();
@@ -167,7 +187,7 @@ function renderPhotos() {
     const imageUrl = isHttpsUrl(photo.thumbnailUrl) ? escapeHtml(photo.thumbnailUrl) : '';
     const fallbackUrl = isHttpsUrl(photo.driveUrl) ? escapeHtml(photo.driveUrl) : '';
     const adminActions = state.isAdmin ? `<div class="photo-card-actions"><button type="button" data-delete-photo="${escapeHtml(photo.id)}" aria-label="刪除照片：${escapeHtml(photo.title || '未命名照片')}">刪除照片</button></div>` : '';
-    return `<article class="photo-card" data-view-photo="${escapeHtml(photo.id)}"><div class="photo-card-image"><img src="${imageUrl || fallbackUrl}" alt="${escapeHtml(photo.title)}" loading="lazy" onerror="this.closest('.photo-card-image').classList.add('image-failed')" /></div><div class="photo-card-info"><h2>${escapeHtml(photo.title || '未命名照片')}</h2><p>${escapeHtml(photo.description || '')}</p><time datetime="${escapeHtml(photo.createdAt)}">${escapeHtml(formatPhotoDate(photo.createdAt))}</time>${adminActions}</div></article>`;
+    return `<article class="photo-card" data-view-photo="${escapeHtml(photo.id)}"><div class="photo-card-image"><img src="${imageUrl || fallbackUrl}" alt="${escapeHtml(photo.title)}" loading="lazy" onerror="this.closest('.photo-card-image').classList.add('image-failed')" /></div><div class="photo-card-info"><h2>${escapeHtml(photo.title || '未命名照片')}</h2><p>${escapeHtml(photo.description || '')}</p><div class="photo-card-meta"><time datetime="${escapeHtml(photo.createdAt)}">${escapeHtml(formatPhotoDate(photo.createdAt))}</time>${adminActions}</div></div></article>`;
   }).join('');
 }
 
@@ -355,6 +375,8 @@ function wireEvents() {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeViewer(); if (state.loginOpen) { state.loginOpen = false; renderAdminState(); } } });
 }
 
+restoreAdminSession();
+restoreAdminSession();
 wireEvents();
 renderAdminState();
 renderPhotos();

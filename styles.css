@@ -167,7 +167,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .photo-card-info h2 { overflow: hidden; margin: 0 0 6px; color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 15px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
 .photo-card-info p { display: -webkit-box; overflow: hidden; min-height: 0; margin: 0 0 9px; color: var(--ink-soft); font-size: 11px; line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .photo-card-info time { color: var(--muted); font-size: 10px; }
-.photo-card-actions { margin-top: 8px; }
+.photo-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 19px; }
+.photo-card-actions { margin: 0; }
 .photo-card-actions button { padding: 2px 0; border: 0; color: var(--muted); background: transparent; font-size: 10px; }
 .photo-card-actions button:hover { color: var(--coral); }
 .photo-load-more-wrap { display: flex; justify-content: center; padding: 6px 0 70px; }

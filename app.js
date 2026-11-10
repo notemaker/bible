@@ -16,6 +16,7 @@ const FEATURED_TYPE_ORDER = ['內容架構', '晨興綱要', '晨興內容', '�
 const FEATURED_TYPE_ALIASES = { 晨興網要: '晨興綱要' };
 
 const CONFIG_KEY = 'bible-truth-config';
+const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
@@ -60,6 +61,23 @@ function saveConfig() {
     appsScriptUrl: (state.config.appsScriptUrl || '').trim(),
     googleClientId: (state.config.googleClientId || '').trim()
   }));
+}
+
+function saveAdminSession() {
+  if (state.isAdmin && state.credential) sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ credential: state.credential, user: state.user }));
+}
+
+function restoreAdminSession() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(ADMIN_SESSION_KEY) || 'null');
+    if (saved?.credential && saved?.user) {
+      state.credential = saved.credential;
+      state.user = saved.user;
+      state.isAdmin = true;
+    }
+  } catch {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  }
 }
 
 function escapeHtml(value = '') {
@@ -338,6 +356,7 @@ window.handleGoogleCredential = async function handleGoogleCredential(response) 
       state.credential = null;
       return;
     }
+    saveAdminSession();
     closeModal();
     render();
     showToast(`已登入：${state.user.displayName || state.user.email}`);
@@ -434,6 +453,7 @@ function logout() {
   state.isAdmin = false;
   state.user = null;
   state.credential = null;
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
   render();
   showToast('已登出管理者模式。');
 }
@@ -824,6 +844,7 @@ function wireEvents() {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.modal) closeModal(); });
 }
 
+restoreAdminSession();
 wireEvents();
 render();
 loadLiveData();
