@@ -35,21 +35,6 @@
       </header>
 
       <main>
-        <section class="toolbar" aria-label="影音搜尋與篩選">
-          <label class="search-field">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 5 5" /></svg>
-            <span class="sr-only">搜尋影音</span>
-            <input id="searchInput" type="search" autocomplete="off" placeholder="搜尋標題或說明…" />
-          </label>
-          <label class="type-field">
-            <span class="field-label">影音類型</span>
-            <select id="typeFilter" aria-label="依影音類型篩選">
-              <option value="all">全部類型</option>
-            </select>
-          </label>
-          <button id="addTypeButton" class="button button-outline admin-only" type="button" hidden>＋ 新增類型</button>
-        </section>
-
         <div id="demoNotice" class="demo-notice" role="status">
           <span class="notice-icon">i</span>
           <span>目前為示範模式。管理者連線後，影音與影音類型會從 Google 試算表讀取。</span>
@@ -65,6 +50,16 @@
             <span id="featuredCount" class="featured-count">0 部影音</span>
           </div>
           <div id="featuredMediaGrid" class="media-list featured-list" aria-live="polite"></div>
+        </section>
+
+        <section class="toolbar" aria-label="影音類型篩選">
+          <label class="type-field">
+            <span class="field-label">類型</span>
+            <select id="typeFilter" aria-label="依影音類型篩選">
+              <option value="all">全部類型</option>
+            </select>
+          </label>
+          <button id="addTypeButton" class="button button-outline admin-only" type="button" hidden>＋ 新增類型</button>
         </section>
 
         <section class="collection-header">
