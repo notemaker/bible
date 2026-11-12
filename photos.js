@@ -21,6 +21,7 @@ const state = {
   credential: null,
   loginOpen: false,
   uploadOpen: false,
+  editingPhotoId: null,
   viewerPhoto: null,
   zoom: 1,
   toastTimer: null
@@ -161,6 +162,7 @@ function logout() {
   state.credential = null;
   sessionStorage.removeItem(ADMIN_SESSION_KEY);
   state.uploadOpen = false;
+  state.editingPhotoId = null;
   state.loginOpen = false;
   renderAdminState();
   showToast('已登出管理者模式。');
@@ -172,6 +174,7 @@ function renderAdminState() {
   $('#adminName').textContent = state.user?.displayName || state.user?.email || '管理者';
   $('#addPhotoButton').hidden = !state.isAdmin;
   $('#photoUploadPanel').hidden = !state.isAdmin || !state.uploadOpen;
+  $('#photoEditPanel').hidden = !state.isAdmin || !state.editingPhotoId;
   $('#loginPanel').hidden = !state.loginOpen || state.isAdmin;
   renderPhotos();
 }
@@ -186,7 +189,7 @@ function renderPhotos() {
   $('#photoGrid').innerHTML = state.photos.map((photo) => {
     const imageUrl = isHttpsUrl(photo.thumbnailUrl) ? escapeHtml(photo.thumbnailUrl) : '';
     const fallbackUrl = isHttpsUrl(photo.driveUrl) ? escapeHtml(photo.driveUrl) : '';
-    const adminActions = state.isAdmin ? `<div class="photo-card-actions"><button type="button" data-delete-photo="${escapeHtml(photo.id)}" aria-label="刪除照片：${escapeHtml(photo.title || '未命名照片')}">刪除照片</button></div>` : '';
+    const adminActions = state.isAdmin ? `<div class="photo-card-actions"><button class="photo-edit-button" type="button" data-edit-photo="${escapeHtml(photo.id)}" aria-label="修改照片：${escapeHtml(photo.title || '未命名照片')}">修改</button><button class="photo-delete-button" type="button" data-delete-photo="${escapeHtml(photo.id)}" aria-label="刪除照片：${escapeHtml(photo.title || '未命名照片')}">刪除</button></div>` : '';
     return `<article class="photo-card" data-view-photo="${escapeHtml(photo.id)}"><div class="photo-card-image"><img src="${imageUrl || fallbackUrl}" alt="${escapeHtml(photo.title)}" loading="lazy" onerror="this.closest('.photo-card-image').classList.add('image-failed')" /></div><div class="photo-card-info"><h2>${escapeHtml(photo.title || '未命名照片')}</h2><p>${escapeHtml(photo.description || '')}</p><div class="photo-card-meta"><time datetime="${escapeHtml(photo.createdAt)}">${escapeHtml(formatPhotoDate(photo.createdAt))}</time>${adminActions}</div></div></article>`;
   }).join('');
 }
@@ -223,6 +226,45 @@ function openUpload() {
 function closeUpload() {
   state.uploadOpen = false;
   renderAdminState();
+}
+
+function openEditPhoto(photoId) {
+  if (!state.isAdmin) return;
+  const photo = state.photos.find((item) => String(item.id) === String(photoId));
+  if (!photo) return;
+  state.editingPhotoId = photo.id;
+  $('#editPhotoTitleInput').value = photo.title || '';
+  $('#editPhotoDescriptionInput').value = photo.description || '';
+  $('#editStatus').textContent = '';
+  renderAdminState();
+  $('#photoEditPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#editPhotoTitleInput').focus();
+}
+
+function closeEditPhoto() {
+  state.editingPhotoId = null;
+  renderAdminState();
+}
+
+async function handlePhotoEdit(event) {
+  event.preventDefault();
+  if (!state.isAdmin || !state.editingPhotoId) return;
+  const title = $('#editPhotoTitleInput').value.trim();
+  if (!title) { $('#editStatus').textContent = '照片標題不能空白。'; return; }
+  const button = $('#savePhotoEditButton');
+  button.disabled = true;
+  $('#editStatus').textContent = '正在更新照片內容…';
+  try {
+    const receipt = await postAndWait({ action: 'updatePhoto', credential: state.credential, photoId: state.editingPhotoId, record: { title, description: $('#editPhotoDescriptionInput').value.trim() } });
+    if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '照片更新失敗。');
+    closeEditPhoto();
+    showToast('照片內容已更新。');
+    await loadPhotos(true);
+  } catch (error) {
+    $('#editStatus').textContent = error.message || '照片更新失敗。';
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function fileToDataUrl(blob) {
@@ -355,8 +397,12 @@ function wireEvents() {
   $('#closeUploadButton').addEventListener('click', closeUpload);
   $('#photoFileInput').addEventListener('change', previewFiles);
   $('#photoForm').addEventListener('submit', handleUpload);
+  $('#closeEditButton').addEventListener('click', closeEditPhoto);
+  $('#photoEditForm').addEventListener('submit', handlePhotoEdit);
   $('#loadMoreButton').addEventListener('click', () => loadPhotos(false));
   $('#photoGrid').addEventListener('click', (event) => {
+    const editButton = event.target.closest('[data-edit-photo]');
+    if (editButton) { event.stopPropagation(); openEditPhoto(editButton.dataset.editPhoto); return; }
     const deleteButton = event.target.closest('[data-delete-photo]');
     if (deleteButton) { event.stopPropagation(); deletePhoto(deleteButton.dataset.deletePhoto); return; }
     const card = event.target.closest('[data-view-photo]');
@@ -375,7 +421,6 @@ function wireEvents() {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeViewer(); if (state.loginOpen) { state.loginOpen = false; renderAdminState(); } } });
 }
 
-restoreAdminSession();
 restoreAdminSession();
 wireEvents();
 renderAdminState();

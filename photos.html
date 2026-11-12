@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20261110-12" />
-    <script src="./photos.js?v=20261110-5" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20261112-2" />
+    <script src="./photos.js?v=20261112-2" defer></script>
   </head>
   <body class="photos-page">
     <div class="app-shell">
@@ -67,6 +67,21 @@
             <label>照片說明<textarea id="photoDescriptionInput" rows="3" maxlength="300" placeholder="可填寫聚會、活動或照片內容說明"></textarea></label>
             <div id="photoPreview" class="photo-upload-preview" aria-live="polite"></div>
             <div class="photo-form-actions"><span id="uploadStatus" class="helper-text" role="status"></span><button id="uploadPhotoButton" class="button button-primary" type="submit">上傳照片</button></div>
+          </form>
+        </section>
+
+        <section id="photoEditPanel" class="photo-upload-panel photo-edit-panel" hidden>
+          <div class="section-heading-row">
+            <div>
+              <p class="section-label">MANAGER EDIT</p>
+              <h2>修改照片內容</h2>
+            </div>
+            <button id="closeEditButton" class="button button-quiet" type="button">取消</button>
+          </div>
+          <form id="photoEditForm" class="photo-form">
+            <label>照片標題<input id="editPhotoTitleInput" type="text" maxlength="120" required /></label>
+            <label>照片說明<textarea id="editPhotoDescriptionInput" rows="3" maxlength="300" placeholder="可填寫聚會、活動或照片內容說明"></textarea></label>
+            <div class="photo-form-actions"><span id="editStatus" class="helper-text" role="status"></span><button id="savePhotoEditButton" class="button button-primary" type="submit">更新照片</button></div>
           </form>
         </section>
 
