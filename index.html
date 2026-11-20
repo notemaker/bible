@@ -24,6 +24,7 @@
         <div class="top-actions">
           <span id="connectionState" class="status-pill"><span class="status-dot"></span>示範資料</span>
           <a id="photosButton" class="button button-primary" href="./photos.html">照片首頁</a>
+          <a id="addVerseButton" class="button button-primary admin-only" href="./verses.html" hidden>＋ 新增經節</a>
           <a id="addPhotoButton" class="button button-primary admin-only" href="./photos.html?upload=1" hidden>＋ 新增照片</a>
           <button id="loginButton" class="button button-quiet" type="button">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0" /></svg>
@@ -42,6 +43,12 @@
           <span>正在連線 Google 試算表讀取影音資料…</span>
           <button id="openSettingsButton" class="text-button" type="button">連線設定</button>
         </div>
+
+        <section id="latestVerseSection" class="latest-verse-section" aria-labelledby="latestVerseTitle" hidden>
+          <div class="latest-verse-heading"><span class="section-label">恢復本聖經</span><h2 id="latestVerseTitle">最新經節</h2></div>
+          <blockquote id="latestVerseText" class="latest-verse-text"></blockquote>
+          <div class="latest-verse-meta"><cite id="latestVerseReference"></cite><a id="latestVerseSource" href="#" target="_blank" rel="noopener noreferrer">官方經文來源</a></div>
+        </section>
 
         <section id="featuredSection" class="featured-section" aria-labelledby="featuredTitle" hidden>
           <div class="featured-heading">

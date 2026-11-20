@@ -35,6 +35,7 @@ const state = {
   user: null,
   credential: null,
   todayKey: null,
+  latestVerse: null,
   modal: null,
   editingMediaId: null,
   editingTypeId: null,
@@ -244,6 +245,15 @@ function renderFeaturedMedia() {
   $('#featuredMediaGrid').innerHTML = featured.map((item) => renderMediaCard(item, 'featured-card')).join('');
 }
 
+function renderLatestVerse() {
+  const verse = state.latestVerse;
+  $('#latestVerseSection').hidden = !verse || !verse.text;
+  if (!verse || !verse.text) return;
+  $('#latestVerseText').textContent = verse.text;
+  $('#latestVerseReference').textContent = verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`;
+  $('#latestVerseSource').href = isHttpsUrl(verse.sourceUrl) ? verse.sourceUrl : '#';
+}
+
 function renderMedia() {
   state.filteredMedia = state.media.filter((item) => {
     const inType = state.type === 'all' || item.type === state.type;
@@ -267,6 +277,7 @@ function renderAdminState() {
 
 function render() {
   renderTypeOptions();
+  renderLatestVerse();
   renderFeaturedMedia();
   renderMedia();
   renderAdminState();
@@ -404,6 +415,7 @@ async function loadLiveData() {
     if (!result?.ok) throw new Error(result?.error || '資料讀取失敗。');
     state.media = Array.isArray(result.media) ? result.media : [];
     state.types = Array.isArray(result.types) ? result.types : [];
+    state.latestVerse = result.latestVerse || null;
     state.todayKey = result.today || todayDateKey();
     state.config.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
     saveConfig();
@@ -412,6 +424,7 @@ async function loadLiveData() {
   } catch (error) {
     state.media = [];
     state.types = [];
+    state.latestVerse = null;
     state.todayKey = null;
     state.isLive = false;
     render();

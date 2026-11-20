@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="管理者新增恢復本聖經經節。" />
+    <title>新增經節｜集集召會生活</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css?v=20261120-2" />
+    <script src="./verses.js?v=20261120-1" defer></script>
+  </head>
+  <body class="verse-page">
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="回到集集召會生活首頁">
+          <img class="brand-mark" src="/manus-storage/church-logo_2bdca3e7.webp" data-fallback="./assets/church-logo.webp" onerror="if (this.dataset.fallback) { this.src = this.dataset.fallback; delete this.dataset.fallback; }" alt="" aria-hidden="true" />
+          <span class="brand-text"><span class="eyebrow">BIBLE VERSE ARCHIVE</span><strong>集集召會生活</strong></span>
+        </a>
+        <div class="top-actions">
+          <a class="button button-primary" href="./">影音首頁</a>
+          <span id="adminName" class="admin-name"></span>
+          <button id="logoutButton" class="button button-quiet" type="button">登出</button>
+        </div>
+      </header>
+      <main>
+        <div class="page-heading"><div><p class="eyebrow accent">RECOVERY VERSION</p><h1>新增經節</h1></div><span class="status-pill connected"><span class="status-dot"></span>管理者功能</span></div>
+        <section class="verse-panel" aria-labelledby="verseFormTitle">
+          <h2 id="verseFormTitle">查詢恢復本聖經</h2>
+          <p class="helper-text">選擇書卷並輸入章、節，系統會從官方恢復本網站查詢繁體中文經文。</p>
+          <form id="verseForm" class="form-stack">
+            <label>書卷<span class="required">*</span><select id="bookInput" name="book" required></select></label>
+            <label>章<span class="required">*</span><input id="chapterInput" name="chapter" required type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3" /></label>
+            <label>節<span class="required">*</span><input id="verseInput" name="verse" required type="number" min="1" step="1" inputmode="numeric" placeholder="例如：16" /></label>
+            <div class="form-actions"><a class="button button-outline" href="./">取消</a><button id="lookupButton" class="button button-primary" type="submit">查詢經節</button></div>
+          </form>
+          <div id="verseMessage" class="verse-message" role="status" aria-live="polite"></div>
+          <div id="versePreview" class="verse-preview" hidden>
+            <h2 id="previewReference"></h2>
+            <blockquote id="previewText"></blockquote>
+            <a id="previewSource" class="verse-source" href="#" target="_blank" rel="noopener noreferrer">查看官方恢復本來源</a>
+            <div class="form-actions"><button id="saveButton" class="button button-primary" type="button">儲存經節</button></div>
+          </div>
+        </section>
+      </main>
+      <footer class="footer"><span>僅管理者可新增經節</span><span>經文來源：官方恢復本網站</span></footer>
+    </div>
+  </body>
+</html>
