@@ -48,6 +48,7 @@ async function lookupVerse(event) {
   const button = $('#lookupButton'); button.disabled = true; button.textContent = '查詢中…'; $('#versePreview').hidden = true; showMessage('正在從官方恢復本網站查詢…', true);
   try {
     const result = await jsonp({ action: 'bibleLookup', book: option.dataset.book, bookCode: option.value, chapter, verse });
+    if (result?.error === '不支援的讀取操作') throw new Error('Apps Script 尚未更新到新增經節版本，請先將最新版 Code.gs 部署為新的 Web App 版本。');
     if (!result?.ok || !result.verse) throw new Error(result?.error || '找不到這個經節。');
     preview = result.verse;
     $('#previewReference').textContent = preview.reference;
