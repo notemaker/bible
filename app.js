@@ -12,7 +12,7 @@ const DEMO_MEDIA = [
   { id: 'demo-4', title: '聽見真理，也活出真理', url: 'https://www.youtube.com/results?search_query=聽見真理+活出真理+講道', type: '主日講道', description: '真理不只停留在理解，也邀請我們用選擇與行動回應。', createdAt: '2026-10-09', createdBy: '示範資料' }
 ];
 
-const FEATURED_TYPE_ORDER = ['內容架構', '晨興綱要', '晨興內容', '聖經背誦'];
+const FEATURED_TYPE_ORDER = ['內容架構', '晨興綱要', '晨興內容', '聖經背誦', '特別交通'];
 const FEATURED_TYPE_ALIASES = { 晨興網要: '晨興綱要' };
 
 const CONFIG_KEY = 'bible-truth-config';
@@ -239,10 +239,9 @@ function openMediaPlayer(mediaId) {
 
 function renderFeaturedMedia() {
   const featured = getFeaturedMedia();
+  $('#featuredSection').hidden = featured.length === 0;
   $('#featuredCount').textContent = `${featured.length} 部影音`;
-  $('#featuredMediaGrid').innerHTML = featured.length
-    ? featured.map((item) => renderMediaCard(item, 'featured-card')).join('')
-    : '<div class="featured-empty"><strong>今天尚無符合條件的精選影片</strong><span>當日新增且類型為「內容架構」、「晨興綱要」、「晨興內容」或「聖經背誦」的影音會顯示在這裡。</span></div>';
+  $('#featuredMediaGrid').innerHTML = featured.map((item) => renderMediaCard(item, 'featured-card')).join('');
 }
 
 function renderMedia() {
