@@ -283,7 +283,7 @@ function speakLatestVerse() {
     button.textContent = '播放';
     return;
   }
-  const text = `${verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`}。${verse.text}`;
+  const text = verse.text;
   latestVerseUtterance = new SpeechSynthesisUtterance(text);
   latestVerseUtterance.lang = 'zh-TW';
   latestVerseUtterance.rate = 0.88;
