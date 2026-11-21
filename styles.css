@@ -78,6 +78,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .latest-verse-heading h2 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 22px; }
 .latest-verse-text { margin: 16px 0 12px; color: #f1f5f0; font-family: "Noto Serif TC", serif; font-size: clamp(18px, 2.4vw, 27px); line-height: 1.8; white-space: pre-line; }
 .latest-verse-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink-soft); font-size: 12px; }
+.latest-verse-actions { display: inline-flex; align-items: center; gap: 14px; }
+.latest-verse-actions .button { min-height: 32px; padding: 0 14px; font-size: 12px; }
 .latest-verse-meta a { color: var(--sage-deep); text-underline-offset: 3px; }
 .notice-icon { display: grid; place-items: center; width: 17px; height: 17px; flex: 0 0 auto; border: 1px solid #c8ad58; border-radius: 50%; color: #a1822e; font-family: serif; font-size: 12px; font-weight: 700; }
 .text-button { margin-left: auto; padding: 0; border: 0; color: var(--sage-deep); background: transparent; font-size: 11px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
