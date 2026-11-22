@@ -17,6 +17,8 @@ const FEATURED_TYPE_ALIASES = { 晨興網要: '晨興綱要' };
 
 const CONFIG_KEY = 'bible-truth-config';
 const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
+const LIVE_DATA_CACHE_KEY = 'bible-truth-live-data-v1';
+const LIVE_DATA_CACHE_TTL = 60 * 1000;
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
@@ -36,6 +38,8 @@ const state = {
   credential: null,
   todayKey: null,
   latestVerse: null,
+  latestVerses: [],
+  hasCachedData: false,
   modal: null,
   editingMediaId: null,
   editingTypeId: null,
@@ -64,6 +68,33 @@ function saveConfig() {
     googleClientId: (state.config.googleClientId || '').trim()
   }));
 }
+
+function applyLiveData(result) {
+  state.media = Array.isArray(result.media) ? result.media : [];
+  state.types = Array.isArray(result.types) ? result.types : [];
+  state.latestVerses = Array.isArray(result.latestVerses) ? result.latestVerses : (result.latestVerse ? [result.latestVerse] : []);
+  state.latestVerse = state.latestVerses[0] || null;
+  state.todayKey = result.today || todayDateKey();
+}
+
+function saveLiveDataCache(result) {
+  try { localStorage.setItem(LIVE_DATA_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data: result })); } catch (error) { /* ignore storage limits */ }
+}
+
+function loadLiveDataCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(LIVE_DATA_CACHE_KEY) || 'null');
+    if (!cached?.data || Date.now() - Number(cached.savedAt || 0) > LIVE_DATA_CACHE_TTL) return false;
+    applyLiveData(cached.data);
+    state.hasCachedData = true;
+    return true;
+  } catch {
+    localStorage.removeItem(LIVE_DATA_CACHE_KEY);
+    return false;
+  }
+}
+
+function clearLiveDataCache() { localStorage.removeItem(LIVE_DATA_CACHE_KEY); }
 
 function saveAdminSession() {
   if (state.isAdmin && state.credential) sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ credential: state.credential, user: state.user }));
@@ -247,16 +278,14 @@ function renderFeaturedMedia() {
 }
 
 function renderLatestVerse() {
-  const verse = state.latestVerse;
-  $('#latestVerseSection').hidden = !verse || !verse.text;
-  if (!verse || !verse.text) return;
-  $('#latestVerseText').textContent = verse.text;
-  $('#latestVerseReference').textContent = verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`;
-  $('#latestVerseSource').href = isHttpsUrl(verse.sourceUrl) ? verse.sourceUrl : '#';
+  const verses = state.latestVerses.filter((verse) => verse && verse.text).slice(0, 3);
+  $('#latestVerseSection').hidden = !verses.length;
+  $('#latestVerseList').innerHTML = verses.map((verse) => `<li><div class="latest-verse-reference">${escapeHtml(verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`)}</div><div class="latest-verse-text">${escapeHtml(verse.text)}</div>${isHttpsUrl(verse.sourceUrl) ? `<a class="latest-verse-source" href="${escapeHtml(verse.sourceUrl)}" target="_blank" rel="noopener noreferrer">官方經文來源</a>` : ''}</li>`).join('');
+  if (!verses.length) return;
   const button = $('#latestVerseSpeakButton');
   button.disabled = !('speechSynthesis' in window);
   button.textContent = '播放';
-  button.setAttribute('aria-label', `播放${verse.reference || '最新經節'}`);
+  button.setAttribute('aria-label', '播放今日經節');
 }
 
 function chooseChineseFemaleVoice() {
@@ -271,8 +300,8 @@ function chooseChineseFemaleVoice() {
 }
 
 function speakLatestVerse() {
-  const verse = state.latestVerse;
-  if (!verse?.text || !('speechSynthesis' in window)) {
+  const verses = state.latestVerses.filter((verse) => verse && verse.text).slice(0, 3);
+  if (!verses.length || !('speechSynthesis' in window)) {
     showToast('此瀏覽器不支援語音播放。');
     return;
   }
@@ -283,7 +312,7 @@ function speakLatestVerse() {
     button.textContent = '播放';
     return;
   }
-  const text = verse.text;
+  const text = verses.map((verse) => verse.text).join('。');
   latestVerseUtterance = new SpeechSynthesisUtterance(text);
   latestVerseUtterance.lang = 'zh-TW';
   latestVerseUtterance.rate = 0.88;
@@ -439,7 +468,7 @@ async function submitAndWait(payload, allowEndpointRecovery = true) {
   const body = { ...payload, requestId };
   await fetch(state.config.appsScriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 650));
+    await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 250 : attempt === 1 ? 350 : 500));
     const receipt = await jsonp({ action: 'status', requestId });
     if (receipt?.result?.error === '不支援的寫入操作' && allowEndpointRecovery && state.config.appsScriptUrl !== DEFAULT_CONFIG.appsScriptUrl) {
       state.config.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
@@ -457,22 +486,24 @@ async function loadLiveData() {
   try {
     const result = await jsonp({ action: 'list' }, DEFAULT_CONFIG.appsScriptUrl);
     if (!result?.ok) throw new Error(result?.error || '資料讀取失敗。');
-    state.media = Array.isArray(result.media) ? result.media : [];
-    state.types = Array.isArray(result.types) ? result.types : [];
-    state.latestVerse = result.latestVerse || null;
-    state.todayKey = result.today || todayDateKey();
+    applyLiveData(result);
+    saveLiveDataCache(result);
+    state.hasCachedData = false;
     state.config.appsScriptUrl = DEFAULT_CONFIG.appsScriptUrl;
     saveConfig();
     state.isLive = true;
     render();
   } catch (error) {
-    state.media = [];
-    state.types = [];
-    state.latestVerse = null;
-    state.todayKey = null;
+    if (!state.hasCachedData) {
+      state.media = [];
+      state.types = [];
+      state.latestVerse = null;
+      state.latestVerses = [];
+      state.todayKey = null;
+    }
     state.isLive = false;
     render();
-    showToast(error.message || '無法讀取 Google 試算表資料。');
+    showToast(state.hasCachedData ? '目前顯示最近資料，Google 試算表正在重新連線。' : (error.message || '無法讀取 Google 試算表資料。'));
   }
 }
 
@@ -689,6 +720,7 @@ function scheduleVideoTitleLookup() {
 async function handleMediaSubmit(event) {
   event.preventDefault();
   const formElement = event.currentTarget;
+  const submitButton = $('#mediaSubmitButton');
   const form = new FormData(formElement);
   const record = Object.fromEntries(form.entries());
   const autoThumbnail = getYouTubeThumbnail(record.url || '');
@@ -713,6 +745,8 @@ async function handleMediaSubmit(event) {
     state.editingMediaId = null;
     return;
   }
+  submitButton.disabled = true;
+  submitButton.textContent = '處理中…';
   try {
     const action = state.editingMediaId ? 'updateMedia' : 'addMedia';
     const payload = state.editingMediaId ? { action, credential: state.credential, mediaId: state.editingMediaId, record } : { action, credential: state.credential, record };
@@ -720,9 +754,14 @@ async function handleMediaSubmit(event) {
     if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || (state.editingMediaId ? '影音更新失敗。' : '影音儲存失敗。'));
     closeModal();
     state.editingMediaId = null;
+    clearLiveDataCache();
     await loadLiveData();
     showToast(action === 'updateMedia' ? '影音內容已更新。' : '影音已加入收藏清單。');
-  } catch (error) { showToast(error.message || '影音儲存失敗。'); }
+  } catch (error) {
+    submitButton.disabled = false;
+    submitButton.textContent = state.editingMediaId ? '更新影音' : '儲存影音';
+    showToast(error.message || '影音儲存失敗。');
+  }
 }
 
 async function handleMediaDelete(mediaId, button) {
@@ -737,6 +776,7 @@ async function handleMediaDelete(mediaId, button) {
     if (state.isLive) {
       const receipt = await submitAndWait({ action: 'deleteMedia', credential: state.credential, mediaId: item.id });
       if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音刪除失敗。');
+      clearLiveDataCache();
     }
     state.media = state.media.filter((media) => String(media.id) !== String(mediaId));
     renderFeaturedMedia();
@@ -763,6 +803,7 @@ async function handleTypeDelete(typeId, button) {
     if (state.isLive) {
       const receipt = await submitAndWait({ action: 'deleteType', credential: state.credential, typeId: item.id });
       if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音類型刪除失敗。');
+      clearLiveDataCache();
     }
     state.types = state.types.filter((type) => String(type.id) !== String(typeId));
     if (state.type === item.name) state.type = 'all';
@@ -803,6 +844,7 @@ async function handleTypeSubmit(event) {
   event.preventDefault();
   const name = new FormData(event.currentTarget).get('name').trim();
   if (!name) return;
+  const submitButton = $('#typeSubmitButton');
   if (!state.isLive) {
     if (state.editingTypeId) {
       const oldType = state.types.find((type) => String(type.id) === String(state.editingTypeId));
@@ -817,6 +859,8 @@ async function handleTypeSubmit(event) {
     state.editingTypeId = null;
     return;
   }
+  submitButton.disabled = true;
+  submitButton.textContent = '處理中…';
   try {
     const action = state.editingTypeId ? 'updateType' : 'addType';
     const payload = state.editingTypeId ? { action, credential: state.credential, typeId: state.editingTypeId, name } : { action, credential: state.credential, name };
@@ -824,9 +868,14 @@ async function handleTypeSubmit(event) {
     if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '影音類型儲存失敗。');
     closeModal();
     state.editingTypeId = null;
+    clearLiveDataCache();
     await loadLiveData();
     showToast(action === 'updateType' ? '影音類型已更新。' : '影音類型已新增。');
-  } catch (error) { showToast(error.message || '影音類型儲存失敗。'); }
+  } catch (error) {
+    submitButton.disabled = false;
+    submitButton.textContent = state.editingTypeId ? '更新類型' : '新增類型';
+    showToast(error.message || '影音類型儲存失敗。');
+  }
 }
 
 function wireEvents() {
@@ -902,6 +951,7 @@ function wireEvents() {
 }
 
 restoreAdminSession();
+loadLiveDataCache();
 wireEvents();
 render();
 loadLiveData();

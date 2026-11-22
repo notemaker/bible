@@ -101,7 +101,7 @@ async function postAndWait(payload) {
   const requestId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
   await fetch(state.config.appsScriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...payload, requestId }) });
   for (let attempt = 0; attempt < 18; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 650));
+    await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 250 : attempt === 1 ? 350 : 500));
     const receipt = await jsonp({ action: 'status', requestId });
     if (receipt?.result?.status === 'pending') continue;
     return receipt;
@@ -380,14 +380,16 @@ function closeViewer() {
   document.body.classList.remove('viewer-open');
 }
 
-async function deletePhoto(photoId) {
+async function deletePhoto(photoId, button) {
   if (!state.isAdmin || !confirm('確定要刪除這張照片嗎？')) return;
+  if (button) { button.disabled = true; button.textContent = '刪除中…'; }
   try {
     const receipt = await postAndWait({ action: 'deletePhoto', credential: state.credential, photoId });
     if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '照片刪除失敗。');
     showToast('照片已刪除。');
     await loadPhotos(true);
   } catch (error) { showToast(error.message || '照片刪除失敗。'); }
+  finally { if (button) { button.disabled = false; button.textContent = '刪除'; } }
 }
 
 function wireEvents() {
@@ -404,7 +406,7 @@ function wireEvents() {
     const editButton = event.target.closest('[data-edit-photo]');
     if (editButton) { event.stopPropagation(); openEditPhoto(editButton.dataset.editPhoto); return; }
     const deleteButton = event.target.closest('[data-delete-photo]');
-    if (deleteButton) { event.stopPropagation(); deletePhoto(deleteButton.dataset.deletePhoto); return; }
+    if (deleteButton) { event.stopPropagation(); deletePhoto(deleteButton.dataset.deletePhoto, deleteButton); return; }
     const card = event.target.closest('[data-view-photo]');
     if (card) openViewer(card.dataset.viewPhoto);
   });

@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20261120-2" />
-    <script src="./verses.js?v=20261120-1" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20261122-2" />
+    <script src="./verses.js?v=20261122-1" defer></script>
   </head>
   <body class="verse-page">
     <div class="app-shell">
@@ -30,16 +30,15 @@
           <h2 id="verseFormTitle">查詢恢復本聖經</h2>
           <p class="helper-text">選擇書卷並輸入章、節，系統會從官方恢復本網站查詢繁體中文經文。</p>
           <form id="verseForm" class="form-stack">
-            <label>書卷<span class="required">*</span><select id="bookInput" name="book" required></select></label>
-            <label>章<span class="required">*</span><input id="chapterInput" name="chapter" required type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3" /></label>
-            <label>節<span class="required">*</span><input id="verseInput" name="verse" required type="number" min="1" step="1" inputmode="numeric" placeholder="例如：16" /></label>
+            <div class="verse-entry"><h3>第 1 處經節<span class="required">*</span></h3><label>書卷<select id="bookInput1"></select></label><div class="verse-number-fields"><label>章<input id="chapterInput1" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3" /></label><label>節<input id="verseInput1" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：16" /></label></div></div>
+            <div class="verse-entry"><h3>第 2 處經節<span class="optional">（可不填）</span></h3><label>書卷<select id="bookInput2"></select></label><div class="verse-number-fields"><label>章<input id="chapterInput2" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3" /></label><label>節<input id="verseInput2" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：16" /></label></div></div>
+            <div class="verse-entry"><h3>第 3 處經節<span class="optional">（可不填）</span></h3><label>書卷<select id="bookInput3"></select></label><div class="verse-number-fields"><label>章<input id="chapterInput3" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3" /></label><label>節<input id="verseInput3" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：16" /></label></div></div>
             <div class="form-actions"><a class="button button-outline" href="./">取消</a><button id="lookupButton" class="button button-primary" type="submit">查詢經節</button></div>
           </form>
           <div id="verseMessage" class="verse-message" role="status" aria-live="polite"></div>
           <div id="versePreview" class="verse-preview" hidden>
-            <h2 id="previewReference"></h2>
-            <blockquote id="previewText"></blockquote>
-            <a id="previewSource" class="verse-source" href="#" target="_blank" rel="noopener noreferrer">查看官方恢復本來源</a>
+            <h2>經節預覽</h2>
+            <ol id="previewList" class="verse-preview-list"></ol>
             <div class="form-actions"><button id="saveButton" class="button button-primary" type="button">儲存經節</button></div>
           </div>
         </section>

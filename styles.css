@@ -76,7 +76,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .latest-verse-section { margin: 22px 0 12px; padding: 22px 24px 20px; border: 1px solid #526b5a; border-left: 4px solid var(--sage-deep); background: linear-gradient(135deg, rgba(43, 57, 48, .92), rgba(34, 38, 34, .96)); }
 .latest-verse-heading { display: flex; align-items: baseline; gap: 10px; }
 .latest-verse-heading h2 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 22px; }
-.latest-verse-text { margin: 16px 0 12px; color: #f1f5f0; font-family: "Noto Serif TC", serif; font-size: clamp(18px, 2.4vw, 27px); line-height: 1.8; white-space: pre-line; }
+.latest-verse-list { display: grid; gap: 16px; margin: 16px 0 18px; padding-left: 28px; }
+.latest-verse-list li { padding-left: 7px; color: var(--sage-deep); }
+.latest-verse-reference { margin-bottom: 4px; color: var(--sage-deep); font-size: 13px; font-weight: 700; }
+.latest-verse-text { color: #f1f5f0; font-family: "Noto Serif TC", serif; font-size: clamp(17px, 2.2vw, 25px); line-height: 1.8; white-space: pre-line; }
+.latest-verse-source { display: inline-block; margin-top: 5px; color: var(--sage-deep); font-size: 11px; text-underline-offset: 3px; }
 .latest-verse-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink-soft); font-size: 12px; }
 .latest-verse-actions { display: inline-flex; align-items: center; gap: 14px; }
 .latest-verse-actions .button { min-height: 32px; padding: 0 14px; font-size: 12px; }
@@ -224,9 +228,18 @@ body.viewer-open { overflow: hidden; }
 .verse-page .page-heading h1 { margin: 0; font-family: "Noto Serif TC", serif; font-size: clamp(30px, 5vw, 52px); }
 .verse-panel { max-width: 720px; margin: 28px auto 0; padding: 26px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
 .verse-panel .form-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.verse-entry { padding: 17px; border: 1px solid var(--line); background: rgba(25, 29, 26, .72); }
+.verse-entry h3 { margin: 0 0 14px; color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 17px; }
+.verse-entry .required, .verse-entry .optional { margin-left: 6px; color: var(--coral); font-family: "Noto Sans TC", sans-serif; font-size: 11px; font-weight: 400; }
+.verse-entry .optional { color: var(--muted); }
+.verse-number-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .verse-preview { margin-top: 26px; padding: 22px; border-top: 1px solid var(--line); background: rgba(43, 57, 48, .55); }
 .verse-preview h2 { margin: 0 0 14px; font-family: "Noto Serif TC", serif; font-size: 22px; }
 .verse-preview blockquote { margin: 0 0 14px; color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 20px; line-height: 1.85; white-space: pre-line; }
+.verse-preview-list { display: grid; gap: 18px; margin: 0; padding-left: 24px; }
+.verse-preview-list li { padding-left: 5px; color: var(--sage-deep); }
+.verse-preview-list strong { color: var(--ink); }
+.verse-preview-list blockquote { margin: 8px 0; }
 .verse-preview .verse-source { color: var(--sage-deep); font-size: 12px; }
 .verse-message { min-height: 22px; margin-top: 12px; color: var(--coral); font-size: 12px; line-height: 1.6; }
 @media (max-width: 640px) { .latest-verse-section { padding: 18px; } .latest-verse-meta { align-items: flex-start; flex-direction: column; } .verse-page .page-heading { align-items: flex-start; flex-direction: column; } .verse-panel { padding: 18px; } .verse-panel .form-actions { align-items: stretch; flex-direction: column-reverse; } }
