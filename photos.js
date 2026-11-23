@@ -28,6 +28,7 @@ const state = {
 };
 
 const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 function loadPhotoConfig() {
   try {
@@ -172,7 +173,7 @@ function renderAdminState() {
   $('#loginButton').hidden = state.isAdmin;
   $('#adminActions').hidden = !state.isAdmin;
   $('#adminName').textContent = state.user?.displayName || state.user?.email || '管理者';
-  $('#addPhotoButton').hidden = !state.isAdmin;
+  $$('.admin-only').forEach((element) => { element.hidden = !state.isAdmin; });
   $('#photoUploadPanel').hidden = !state.isAdmin || !state.uploadOpen;
   $('#photoEditPanel').hidden = !state.isAdmin || !state.editingPhotoId;
   $('#loginPanel').hidden = !state.loginOpen || state.isAdmin;

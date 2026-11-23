@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20261122-2" />
+    <link rel="stylesheet" href="./styles.css?v=20261123-3" />
     <script src="./photos.js?v=20261122-1" defer></script>
   </head>
   <body class="photos-page">
@@ -23,7 +23,15 @@
         </a>
         <div class="top-actions">
           <span id="connectionState" class="status-pill"><span class="status-dot"></span>連線中…</span>
-          <a class="button button-primary" href="./">影音首頁</a>
+          <details class="site-menu">
+            <summary class="button button-primary">功能選單</summary>
+            <div class="site-menu-panel">
+              <a href="./">影音首頁</a>
+              <a href="./photos.html">照片首頁</a>
+              <a class="admin-only" href="./verses.html" hidden>＋ 新增經節</a>
+              <a class="admin-only" href="./photos.html?upload=1" hidden>＋ 新增照片</a>
+            </div>
+          </details>
           <button id="loginButton" class="button button-quiet" type="button">管理者登入</button>
           <div id="adminActions" class="admin-actions" hidden>
             <span id="adminName" class="admin-name"></span>
