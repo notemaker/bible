@@ -57,6 +57,15 @@ function renderAdminState() {
   const isAdmin = Boolean(session?.credential && session?.user);
   $$('.admin-only').forEach((element) => { element.hidden = !isAdmin; });
   $('#adminName').textContent = isAdmin ? (session.user.displayName || session.user.email || '管理者') : '';
+  $('#loginButton').hidden = isAdmin;
+  $('#logoutButton').hidden = !isAdmin;
+}
+function logout() {
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  session = null;
+  currentOverview = currentOverview ? { ...currentOverview } : null;
+  renderAdminState();
+  showToast('已登出管理者模式。');
 }
 function renderOverview(overview) {
   currentOverview = overview;
@@ -130,5 +139,6 @@ function init() {
   $('#overviewVideoInfoButton').addEventListener('click', loadVideoInfo);
   $('#overviewSaveButton').addEventListener('click', saveOverview);
   $('#overviewDeleteButton').addEventListener('click', deleteOverview);
+  $('#logoutButton').addEventListener('click', logout);
 }
 init();
