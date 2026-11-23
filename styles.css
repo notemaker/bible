@@ -80,7 +80,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .latest-verse-list li { padding-left: 7px; color: var(--sage-deep); }
 .latest-verse-reference { margin-bottom: 4px; color: var(--sage-deep); font-size: 13px; font-weight: 700; }
 .latest-verse-text { color: #f1f5f0; font-family: "Noto Serif TC", serif; font-size: clamp(17px, 2.2vw, 25px); line-height: 1.8; white-space: pre-line; }
-.latest-verse-source { display: inline-block; margin-top: 5px; color: var(--sage-deep); font-size: 11px; text-underline-offset: 3px; }
+.latest-verse-links { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 5px; }
+.latest-verse-source { display: inline-block; color: var(--sage-deep); font-size: 11px; text-underline-offset: 3px; }
+.latest-verse-speak { min-height: 28px; padding: 0 11px; font-size: 11px; }
 .latest-verse-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink-soft); font-size: 12px; }
 .latest-verse-actions { display: inline-flex; align-items: center; gap: 14px; }
 .latest-verse-actions .button { min-height: 32px; padding: 0 14px; font-size: 12px; }

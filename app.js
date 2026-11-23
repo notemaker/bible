@@ -48,6 +48,7 @@ const state = {
   toastTimer: null
 };
 let latestVerseUtterance = null;
+let latestVerseActiveButton = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -280,7 +281,7 @@ function renderFeaturedMedia() {
 function renderLatestVerse() {
   const verses = state.latestVerses.filter((verse) => verse && verse.text).slice(0, 3);
   $('#latestVerseSection').hidden = !verses.length;
-  $('#latestVerseList').innerHTML = verses.map((verse) => `<li><div class="latest-verse-reference">${escapeHtml(verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`)}</div><div class="latest-verse-text">${escapeHtml(verse.text)}</div>${isHttpsUrl(verse.sourceUrl) ? `<a class="latest-verse-source" href="${escapeHtml(verse.sourceUrl)}" target="_blank" rel="noopener noreferrer">官方經文來源</a>` : ''}</li>`).join('');
+  $('#latestVerseList').innerHTML = verses.map((verse, index) => `<li><div class="latest-verse-reference">${escapeHtml(verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`)}</div><div class="latest-verse-text">${escapeHtml(verse.text)}</div><div class="latest-verse-links">${isHttpsUrl(verse.sourceUrl) ? `<a class="latest-verse-source" href="${escapeHtml(verse.sourceUrl)}" target="_blank" rel="noopener noreferrer">官方經文來源</a>` : ''}<button class="button button-outline latest-verse-speak" type="button" data-speak-verse="${index}" aria-label="播放${escapeHtml(verse.reference || '這處經節')}">播放</button></div></li>`).join('');
   if (!verses.length) return;
   const button = $('#latestVerseSpeakButton');
   button.disabled = !('speechSynthesis' in window);
@@ -309,7 +310,9 @@ function speakLatestVerse() {
   if (window.speechSynthesis.speaking) {
     window.speechSynthesis.cancel();
     latestVerseUtterance = null;
+    latestVerseActiveButton = null;
     button.textContent = '播放';
+    $$('.latest-verse-speak').forEach((item) => { item.textContent = '播放'; });
     return;
   }
   const text = verses.map((verse) => verse.text).join('。');
@@ -321,9 +324,36 @@ function speakLatestVerse() {
   const voice = chooseChineseFemaleVoice();
   if (voice) latestVerseUtterance.voice = voice;
   latestVerseUtterance.onstart = () => { button.textContent = '停止'; };
-  latestVerseUtterance.onend = () => { button.textContent = '播放'; latestVerseUtterance = null; };
-  latestVerseUtterance.onerror = () => { button.textContent = '播放'; latestVerseUtterance = null; showToast('語音播放失敗，請再按一次播放。'); };
+  latestVerseUtterance.onend = () => { button.textContent = '播放'; latestVerseUtterance = null; latestVerseActiveButton = null; $$('.latest-verse-speak').forEach((item) => { item.textContent = '播放'; }); };
+  latestVerseUtterance.onerror = () => { button.textContent = '播放'; latestVerseUtterance = null; latestVerseActiveButton = null; $$('.latest-verse-speak').forEach((item) => { item.textContent = '播放'; }); showToast('語音播放失敗，請再按一次播放。'); };
   window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(latestVerseUtterance);
+}
+
+function speakSingleVerse(index, button) {
+  const verse = state.latestVerses.filter((item) => item && item.text).slice(0, 3)[Number(index)];
+  if (!verse || !('speechSynthesis' in window)) {
+    showToast('此瀏覽器不支援語音播放。');
+    return;
+  }
+  if (latestVerseActiveButton === button && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    return;
+  }
+  window.speechSynthesis.cancel();
+  $('#latestVerseSpeakButton').textContent = '播放';
+  $$('.latest-verse-speak').forEach((item) => { item.textContent = '播放'; });
+  latestVerseActiveButton = button;
+  latestVerseUtterance = new SpeechSynthesisUtterance(verse.text);
+  latestVerseUtterance.lang = 'zh-TW';
+  latestVerseUtterance.rate = 0.88;
+  latestVerseUtterance.pitch = 1.04;
+  latestVerseUtterance.volume = 1;
+  const voice = chooseChineseFemaleVoice();
+  if (voice) latestVerseUtterance.voice = voice;
+  latestVerseUtterance.onstart = () => { button.textContent = '停止'; };
+  latestVerseUtterance.onend = () => { button.textContent = '播放'; latestVerseUtterance = null; latestVerseActiveButton = null; };
+  latestVerseUtterance.onerror = () => { button.textContent = '播放'; latestVerseUtterance = null; latestVerseActiveButton = null; showToast('語音播放失敗，請再按一次播放。'); };
   window.speechSynthesis.speak(latestVerseUtterance);
 }
 
@@ -887,6 +917,10 @@ function wireEvents() {
   $('#saveSettingsButton').addEventListener('click', saveConnectionSettings);
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
   $('#latestVerseSpeakButton').addEventListener('click', speakLatestVerse);
+  $('#latestVerseList').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-speak-verse]');
+    if (button) speakSingleVerse(button.dataset.speakVerse, button);
+  });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
   const handleMediaGridClick = (event) => {
     const playButton = event.target.closest('[data-play-media]');
