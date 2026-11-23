@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>聖經鳥瞰｜集集召會生活</title>
+    <link rel="stylesheet" href="./styles.css?v=20261123-4" />
+    <script src="./bible-overview.js?v=20261123-1" defer></script>
+  </head>
+  <body class="overview-page">
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="回到集集召會生活首頁">
+          <img class="brand-mark" src="/manus-storage/church-logo_2bdca3e7.webp" data-fallback="./assets/church-logo.webp" onerror="if (this.dataset.fallback) { this.src = this.dataset.fallback; delete this.dataset.fallback; }" alt="" aria-hidden="true" />
+          <span class="brand-text"><span class="eyebrow">BIBLE OVERVIEW</span><strong>集集召會生活</strong></span>
+        </a>
+        <div class="top-actions">
+          <details class="site-menu">
+            <summary class="button button-primary">功能選單</summary>
+            <div class="site-menu-panel">
+              <a href="./">影音首頁</a>
+              <a href="./photos.html">照片首頁</a>
+              <a class="admin-only" href="./verses.html" hidden>＋ 新增經節</a>
+              <a class="admin-only" href="./photos.html?upload=1" hidden>＋ 新增照片</a>
+              <a href="./bible-overview.html">聖經鳥瞰</a>
+            </div>
+          </details>
+          <span id="adminName" class="admin-name"></span>
+          <a class="button button-quiet" href="./">管理者登入</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="overview-heading">
+          <div><p class="eyebrow accent">RECOVERY VERSION</p><h1>聖經鳥瞰</h1><p>選擇一卷聖經與章數，閱讀恢復本本章內容，並整理本章的鳥瞰影片與真理要點。</p></div>
+        </section>
+
+        <section class="overview-panel overview-query-panel" aria-labelledby="overviewQueryTitle">
+          <h2 id="overviewQueryTitle">選擇書卷與章數</h2>
+          <form id="overviewQueryForm" class="overview-query-form">
+            <label>聖經卷名<select id="overviewBookInput" required></select></label>
+            <label>第幾章<input id="overviewChapterInput" type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3" required /></label>
+            <button id="overviewQueryButton" class="button button-primary" type="submit">查詢本章</button>
+          </form>
+          <p id="overviewMessage" class="overview-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section id="overviewContent" class="overview-content" hidden>
+          <section class="overview-panel scripture-panel" aria-labelledby="scriptureTitle">
+            <div class="overview-section-heading"><div><p class="section-label">SCRIPTURE</p><h2 id="scriptureTitle"></h2></div><a id="scriptureSource" class="overview-source" target="_blank" rel="noopener noreferrer">官方恢復本來源</a></div>
+            <div id="scriptureText" class="scripture-text"></div>
+          </section>
+
+          <section class="overview-panel" aria-labelledby="overviewVideoTitle">
+            <div class="overview-section-heading"><div><p class="section-label">VIDEO</p><h2 id="overviewVideoTitle">本章鳥瞰影片</h2></div></div>
+            <div id="overviewVideoPlayer" class="overview-video-player empty-overview-block">尚未設定本章鳥瞰影片。</div>
+            <div class="overview-admin-fields admin-only" hidden>
+              <label>YouTube 影片網址<input id="overviewYoutubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=…" /></label>
+              <div class="overview-video-actions"><button id="overviewVideoInfoButton" class="button button-outline" type="button">讀取影片資料</button><span id="overviewVideoTitleValue" class="helper-text"></span></div>
+            </div>
+          </section>
+
+          <section class="overview-panel" aria-labelledby="truthPointsTitle">
+            <div class="overview-section-heading"><div><p class="section-label">TRUTH POINTS</p><h2 id="truthPointsTitle">本章聖經真理要點</h2></div></div>
+            <div id="truthPointsDisplay" class="truth-points-display empty-overview-block">尚未整理本章真理要點。</div>
+            <div class="overview-admin-fields admin-only" hidden><label>真理要點<textarea id="truthPointsInput" rows="9" placeholder="請輸入或貼上本章聖經真理要點，換行會保留。"></textarea></label></div>
+          </section>
+
+          <div class="overview-save-row admin-only" hidden><button id="overviewSaveButton" class="button button-primary" type="button">儲存本章鳥瞰</button><button id="overviewDeleteButton" class="button button-danger" type="button" hidden>刪除本章資料</button></div>
+        </section>
+      </main>
+      <footer class="footer"><span>公開瀏覽 · 管理者才可寫入</span><span>聖經真理影音收集庫</span></footer>
+    </div>
+    <div id="overviewToast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

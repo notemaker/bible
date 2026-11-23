@@ -250,6 +250,38 @@ body.viewer-open { overflow: hidden; }
 .verse-preview-list blockquote { margin: 8px 0; }
 .verse-preview .verse-source { color: var(--sage-deep); font-size: 12px; }
 .verse-message { min-height: 22px; margin-top: 12px; color: var(--coral); font-size: 12px; line-height: 1.6; }
+.overview-page main { padding-bottom: 70px; }
+.overview-heading { padding: 58px 0 26px; border-bottom: 1px solid var(--line); }
+.overview-heading h1 { margin: 0; font-family: "Noto Serif TC", serif; font-size: clamp(34px, 5vw, 58px); letter-spacing: -0.06em; }
+.overview-heading p:last-child { max-width: 620px; margin: 14px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.8; }
+.overview-panel { margin: 24px auto 0; padding: 25px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+.overview-query-panel { margin-top: 28px; }
+.overview-panel h2 { margin: 0; font-family: "Noto Serif TC", serif; font-size: 24px; }
+.overview-query-form { display: grid; grid-template-columns: minmax(0, 1fr) 180px auto; align-items: end; gap: 14px; margin-top: 20px; }
+.overview-query-form label, .overview-admin-fields label { display: grid; gap: 7px; color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+.overview-query-form input, .overview-query-form select, .overview-admin-fields input, .overview-admin-fields textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 2px; color: var(--ink); background: #191d1a; outline: none; font-size: 13px; font-weight: 400; }
+.overview-query-form input, .overview-query-form select { height: 42px; }
+.overview-query-form input:focus, .overview-query-form select:focus, .overview-admin-fields input:focus, .overview-admin-fields textarea:focus { border-color: #8cad98; box-shadow: 0 0 0 3px rgba(140, 173, 152, 0.14); }
+.overview-message { min-height: 20px; margin: 13px 0 0; color: var(--coral); font-size: 12px; }
+.overview-content { display: grid; gap: 20px; }
+.overview-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.overview-section-heading h2 { font-size: 26px; }
+.overview-source { color: var(--sage-deep); font-size: 11px; text-underline-offset: 3px; }
+.scripture-text { margin-top: 20px; padding: 20px; background: rgba(43, 57, 48, .45); color: #f1f5f0; font-family: "Noto Serif TC", serif; font-size: 18px; line-height: 1.9; }
+.scripture-text p { margin: 0 0 10px; white-space: pre-line; }
+.scripture-text p:last-child { margin-bottom: 0; }
+.scripture-verse-number { display: inline-block; min-width: 2.1em; margin-right: 7px; color: var(--sage-deep); font-family: "Noto Sans TC", sans-serif; font-size: 12px; font-weight: 700; vertical-align: .2em; }
+.overview-video-player { overflow: hidden; aspect-ratio: 16 / 9; margin-top: 18px; background: #000; }
+.overview-video-player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.empty-overview-block { display: grid; place-items: center; min-height: 100px; padding: 20px; color: var(--muted); background: rgba(25, 29, 26, .65); font-size: 12px; }
+.overview-admin-fields { display: grid; gap: 13px; margin-top: 18px; }
+.overview-admin-fields textarea { resize: vertical; line-height: 1.7; }
+.overview-video-actions { display: flex; align-items: center; gap: 13px; }
+.overview-save-row { display: flex; justify-content: flex-end; gap: 10px; margin: 22px 0 60px; }
+.button-danger { color: #fff; background: #b84949; }
+.button-danger:hover { background: #963838; }
+.truth-points-display { min-height: 100px; margin-top: 18px; color: var(--ink-soft); line-height: 1.85; white-space: pre-line; }
+@media (max-width: 640px) { .overview-heading { padding-top: 38px; } .overview-panel { padding: 18px; } .overview-query-form { grid-template-columns: 1fr; } .overview-query-form .button { width: 100%; } .overview-section-heading { flex-direction: column; } .scripture-text { padding: 14px; font-size: 16px; } .overview-video-actions, .overview-save-row { align-items: stretch; flex-direction: column; } .overview-save-row .button { width: 100%; } }
 @media (max-width: 640px) { .latest-verse-section { padding: 18px; } .latest-verse-meta { align-items: flex-start; flex-direction: column; } .verse-page .page-heading { align-items: flex-start; flex-direction: column; } .verse-panel { padding: 18px; } .verse-panel .form-actions { align-items: stretch; flex-direction: column-reverse; } }
 .required { color: var(--coral); }
 .helper-text { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
