@@ -1,5 +1,5 @@
 const OVERVIEW_CONFIG = {
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyW6iqZ3yV5qlmpejFtsy6QmhdABj4yqLIqIf4LQyI-6knsrmPjOa5wNJYbf1Zg7Th0A/exec'
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbywV6iqZ3yV5qlmpejFtsy6QmhdABj4yqLIqIf4LQyI-6knsrmPjOa5wNJYbf1Zg7Th0A/exec'
 };
 const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
 const BOOKS = [
@@ -22,7 +22,7 @@ function jsonp(params) {
     const timer = setTimeout(() => { cleanup(); reject(new Error('查詢逾時，請稍後再試。')); }, 30000);
     const cleanup = () => { clearTimeout(timer); delete window[callback]; script.remove(); };
     window[callback] = (payload) => { cleanup(); resolve(payload); };
-    script.onerror = () => { cleanup(); reject(new Error('目前無法連線 Apps Script。')); };
+    script.onerror = () => { cleanup(); reject(new Error('Apps Script 部署網址無效或目前無法連線，請確認 Web App 部署網址。')); };
     script.src = `${OVERVIEW_CONFIG.appsScriptUrl}?${new URLSearchParams({ ...params, callback }).toString()}`;
     document.body.appendChild(script);
   });
@@ -80,7 +80,10 @@ async function queryChapter(event) {
   const button = $('#overviewQueryButton'); button.disabled = true; button.textContent = '查詢中…'; $('#overviewContent').hidden = true; setMessage('正在查詢官方恢復本本章內容，請稍候…', true);
   try {
     const result = await jsonp({ action: 'bibleOverviewGet', book: option.textContent, bookCode: option.value, chapter });
-    if (!result?.ok || !result.overview) throw new Error(result?.error || '本章查詢失敗。');
+    if (!result?.ok || !result.overview) {
+      if (result?.error === '不支援的讀取操作') throw new Error('目前使用的 Apps Script 尚未更新到聖經鳥瞰版本，請更新部署最新版 Code.gs。');
+      throw new Error(result?.error || '本章查詢失敗。');
+    }
     renderOverview(result.overview); setMessage(`已載入 ${result.overview.book} 第 ${result.overview.chapter} 章。`, true);
   } catch (error) { setMessage(error.message || '本章查詢失敗。'); }
   finally { button.disabled = false; button.textContent = '查詢本章'; }
