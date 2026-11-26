@@ -131,11 +131,13 @@ async function saveOverview() {
   if (!session?.credential || !currentOverview) return;
   const button = $('#overviewSaveButton'); button.disabled = true; button.textContent = '儲存中…';
   const youtubeUrl = $('#overviewYoutubeUrl').value.trim();
-  const record = { ...currentOverview, youtubeUrl, youtubeVideoId: videoInfo.videoId || parseVideoId(youtubeUrl), youtubeTitle: videoInfo.title || '', truthPoints: $('#truthPointsInput').value.trim() };
+  const sameVideo = youtubeUrl && youtubeUrl === String(currentOverview.youtubeUrl || '').trim();
+  const record = { ...currentOverview, youtubeUrl, youtubeVideoId: videoInfo.videoId || parseVideoId(youtubeUrl), youtubeTitle: videoInfo.title || (sameVideo ? currentOverview.youtubeTitle || '' : ''), truthPoints: $('#truthPointsInput').value.trim() };
   try {
     const receipt = await postAndWait({ action: 'bibleOverviewSave', credential: session.credential, record });
     if (!receipt?.result?.ok) throw new Error(receipt?.result?.error || '聖經鳥瞰儲存失敗。');
-    currentOverview = { ...currentOverview, ...record, id: receipt.result.overview?.id || currentOverview.id };
+    currentOverview = { ...currentOverview, ...record, ...(receipt.result.overview || {}), verses: currentOverview.verses || [] };
+    videoInfo = { title: currentOverview.youtubeTitle || '', videoId: currentOverview.youtubeVideoId || parseVideoId(currentOverview.youtubeUrl || '') };
     renderOverview(currentOverview); $('#truthPointsDisplay').textContent = currentOverview.truthPoints || '尚未整理本章真理要點。'; showToast('本章聖經鳥瞰已儲存。');
   } catch (error) { showToast(error.message || '聖經鳥瞰儲存失敗。'); }
   finally { button.disabled = false; button.textContent = '儲存本章鳥瞰'; }
