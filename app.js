@@ -17,8 +17,8 @@ const FEATURED_TYPE_ALIASES = { 晨興網要: '晨興綱要' };
 
 const CONFIG_KEY = 'bible-truth-config';
 const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
-const LIVE_DATA_CACHE_KEY = 'bible-truth-live-data-v1';
-const LIVE_DATA_CACHE_TTL = 60 * 1000;
+const LIVE_DATA_CACHE_KEY = 'bible-truth-live-data-v2';
+const LIVE_DATA_CACHE_TTL = 10 * 60 * 1000;
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
