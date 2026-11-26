@@ -40,11 +40,14 @@ const state = {
   latestVerse: null,
   latestVerses: [],
   hasCachedData: false,
+  hasOlderMedia: false,
+  allMediaLoaded: false,
   modal: null,
   editingMediaId: null,
   editingTypeId: null,
   search: '',
   type: 'all',
+  showAllMedia: false,
   toastTimer: null
 };
 let latestVerseUtterance = null;
@@ -76,6 +79,8 @@ function applyLiveData(result) {
   state.latestVerses = Array.isArray(result.latestVerses) ? result.latestVerses : (result.latestVerse ? [result.latestVerse] : []);
   state.latestVerse = state.latestVerses[0] || null;
   state.todayKey = result.today || todayDateKey();
+  state.allMediaLoaded = Boolean(result.allMedia);
+  state.hasOlderMedia = result.hasMore !== undefined ? Boolean(result.hasMore) : state.media.some((item) => !isCurrentWeekMedia(item));
 }
 
 function saveLiveDataCache(result) {
@@ -146,6 +151,21 @@ function dateKey(value, timeZone = 'Asia/Taipei') {
 
 function todayDateKey() {
   return dateKey(new Date());
+}
+
+function weekStartKey(value) {
+  const key = dateKey(value);
+  if (!key) return '';
+  const date = new Date(`${key}T00:00:00Z`);
+  const day = date.getUTCDay();
+  date.setUTCDate(date.getUTCDate() - (day === 0 ? 6 : day - 1));
+  return date.toISOString().slice(0, 10);
+}
+
+function isCurrentWeekMedia(item) {
+  const today = state.todayKey || todayDateKey();
+  const created = dateKey(item.createdAt);
+  return Boolean(created && today && created >= weekStartKey(today) && created <= today);
 }
 
 function normalizedTypeName(value) {
@@ -322,14 +342,19 @@ function speakSingleVerse(index, button) {
 }
 
 function renderMedia() {
+  const hasOlderMedia = state.hasOlderMedia || state.media.some((item) => !isCurrentWeekMedia(item));
+  const moreButton = $('#moreMediaButton');
+  moreButton.hidden = !hasOlderMedia;
+  moreButton.textContent = state.showAllMedia ? '收起其他影片' : '更多影片';
   state.filteredMedia = state.media.filter((item) => {
     const inType = state.type === 'all' || item.type === state.type;
-    return inType;
+    const inDateRange = state.showAllMedia || isCurrentWeekMedia(item);
+    return inType && inDateRange;
   }).sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
   $('#collectionCount').textContent = `${state.filteredMedia.length} 部影音`;
   const grid = $('#mediaGrid');
   if (!state.filteredMedia.length) {
-    grid.innerHTML = `<div class="empty-state"><strong>還沒有符合條件的影音</strong><span>${state.media.length ? '請清除影音類型篩選。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
+    grid.innerHTML = `<div class="empty-state"><strong>本週還沒有符合條件的影音</strong><span>${state.media.length ? '按「更多影片」可以查看其他日期的影音。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
     return;
   }
   grid.innerHTML = state.filteredMedia.map((item) => renderMediaCard(item)).join('');
@@ -478,7 +503,8 @@ async function submitAndWait(payload, allowEndpointRecovery = true) {
 
 async function loadLiveData() {
   try {
-    const result = await jsonp({ action: 'list' }, DEFAULT_CONFIG.appsScriptUrl);
+    let result = await jsonp({ action: 'homeData' }, DEFAULT_CONFIG.appsScriptUrl);
+    if (result?.error === '不支援的讀取操作') result = await jsonp({ action: 'list' }, DEFAULT_CONFIG.appsScriptUrl);
     if (!result?.ok) throw new Error(result?.error || '資料讀取失敗。');
     applyLiveData(result);
     saveLiveDataCache(result);
@@ -498,6 +524,27 @@ async function loadLiveData() {
     state.isLive = false;
     render();
     showToast(state.hasCachedData ? '目前顯示最近資料，Google 試算表正在重新連線。' : (error.message || '無法讀取 Google 試算表資料。'));
+  }
+}
+
+async function loadAllMedia() {
+  if (state.allMediaLoaded) { state.showAllMedia = true; renderMedia(); return; }
+  const button = $('#moreMediaButton');
+  button.disabled = true;
+  button.textContent = '載入中…';
+  try {
+    const result = await jsonp({ action: 'mediaList' }, DEFAULT_CONFIG.appsScriptUrl);
+    if (result?.error === '不支援的讀取操作') throw new Error('Apps Script 尚未更新到兩階段載入版本，請更新最新版 Code.gs。');
+    if (!result?.ok) throw new Error(result?.error || '更多影片讀取失敗。');
+    state.media = Array.isArray(result.media) ? result.media : state.media;
+    state.allMediaLoaded = true;
+    state.hasOlderMedia = false;
+    state.showAllMedia = true;
+    renderMedia();
+  } catch (error) {
+    showToast(error.message || '更多影片讀取失敗。');
+    button.disabled = false;
+    button.textContent = '更多影片';
   }
 }
 
@@ -885,6 +932,14 @@ function wireEvents() {
     if (button) speakSingleVerse(button.dataset.speakVerse, button);
   });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
+  $('#moreMediaButton').addEventListener('click', () => {
+    if (!state.allMediaLoaded && !state.showAllMedia) {
+      loadAllMedia();
+      return;
+    }
+    state.showAllMedia = !state.showAllMedia;
+    renderMedia();
+  });
   const handleMediaGridClick = (event) => {
     const playButton = event.target.closest('[data-play-media]');
     if (playButton) {
