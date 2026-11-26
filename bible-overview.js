@@ -60,6 +60,23 @@ function renderAdminState() {
   $('#loginButton').hidden = isAdmin;
   $('#logoutButton').hidden = !isAdmin;
 }
+function renderOverviewIndex(overviews) {
+  const list = $('#overviewIndexList');
+  if (!Array.isArray(overviews) || !overviews.length) {
+    list.innerHTML = '<p class="helper-text">目前尚未儲存完成的聖經鳥瞰。</p>';
+    return;
+  }
+  list.innerHTML = overviews.map((overview) => `<button class="overview-index-item" type="button" data-overview-book-code="${escapeHtml(overview.bookCode)}" data-overview-chapter="${escapeHtml(overview.chapter)}"><strong>${escapeHtml(overview.book)} 第 ${escapeHtml(overview.chapter)} 章</strong><span>${escapeHtml(overview.youtubeTitle || '已完成本章鳥瞰')}</span></button>`).join('');
+}
+async function loadOverviewIndex() {
+  try {
+    const result = await jsonp({ action: 'bibleOverviewList' });
+    if (!result?.ok) throw new Error(result?.error || '鳥瞰目錄讀取失敗。');
+    renderOverviewIndex(result.overviews);
+  } catch (error) {
+    $('#overviewIndexList').innerHTML = `<p class="helper-text">${escapeHtml(error.message || '鳥瞰目錄讀取失敗。')}</p>`;
+  }
+}
 function logout() {
   sessionStorage.removeItem(ADMIN_SESSION_KEY);
   session = null;
@@ -135,7 +152,15 @@ async function deleteOverview() {
 }
 function init() {
   session = loadSession(); renderBooks(); renderAdminState();
+  loadOverviewIndex();
   $('#overviewQueryForm').addEventListener('submit', queryChapter);
+  $('#overviewIndexList').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-overview-book-code]');
+    if (!button) return;
+    $('#overviewBookInput').value = button.dataset.overviewBookCode;
+    $('#overviewChapterInput').value = button.dataset.overviewChapter;
+    $('#overviewQueryForm').requestSubmit();
+  });
   $('#overviewVideoInfoButton').addEventListener('click', loadVideoInfo);
   $('#overviewSaveButton').addEventListener('click', saveOverview);
   $('#overviewDeleteButton').addEventListener('click', deleteOverview);
