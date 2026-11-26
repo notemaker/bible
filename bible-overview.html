@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>聖經鳥瞰｜集集召會生活</title>
-    <link rel="stylesheet" href="./styles.css?v=20261126-1" />
-    <script src="./bible-overview.js?v=20261123-3" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20261126-2" />
+    <script src="./bible-overview.js?v=20261126-4" defer></script>
   </head>
   <body class="overview-page">
     <div class="app-shell">
@@ -52,13 +52,8 @@
         </section>
 
         <section id="overviewContent" class="overview-content" hidden>
-          <section class="overview-panel scripture-panel" aria-labelledby="scriptureTitle">
-            <div class="overview-section-heading"><div><p class="section-label">SCRIPTURE</p><h2 id="scriptureTitle"></h2></div><a id="scriptureSource" class="overview-source" target="_blank" rel="noopener noreferrer">官方恢復本來源</a></div>
-            <div id="scriptureText" class="scripture-text"></div>
-          </section>
-
           <section class="overview-panel" aria-labelledby="overviewVideoTitle">
-            <div class="overview-section-heading"><div><p class="section-label">VIDEO</p><h2 id="overviewVideoTitle">本章鳥瞰影片</h2></div></div>
+            <div class="overview-section-heading"><div><p class="section-label">VIDEO</p><h2 id="overviewVideoTitle">烏瞰影片</h2></div></div>
             <div id="overviewVideoPlayer" class="overview-video-player empty-overview-block">尚未設定本章鳥瞰影片。</div>
             <div class="overview-admin-fields admin-only" hidden>
               <label>YouTube 影片網址<input id="overviewYoutubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=…" /></label>
@@ -67,9 +62,14 @@
           </section>
 
           <section class="overview-panel" aria-labelledby="truthPointsTitle">
-            <div class="overview-section-heading"><div><p class="section-label">TRUTH POINTS</p><h2 id="truthPointsTitle">本章聖經真理要點</h2></div></div>
+            <div class="overview-section-heading"><div><p class="section-label">TRUTH POINTS</p><h2 id="truthPointsTitle">真理要點</h2></div></div>
             <div id="truthPointsDisplay" class="truth-points-display empty-overview-block">尚未整理本章真理要點。</div>
             <div class="overview-admin-fields admin-only" hidden><label>真理要點<textarea id="truthPointsInput" rows="9" placeholder="請輸入或貼上本章聖經真理要點，換行會保留。"></textarea></label></div>
+          </section>
+
+          <section class="overview-panel scripture-panel" aria-labelledby="scriptureTitle">
+            <div class="overview-section-heading"><div><p class="section-label">SCRIPTURE</p><h2 id="scriptureTitle">聖經內容</h2></div><a id="scriptureSource" class="overview-source" target="_blank" rel="noopener noreferrer">官方恢復本來源</a></div>
+            <div id="scriptureText" class="scripture-text"></div>
           </section>
 
           <div class="overview-save-row admin-only" hidden><button id="overviewSaveButton" class="button button-primary" type="button">儲存本章鳥瞰</button><button id="overviewDeleteButton" class="button button-danger" type="button" hidden>刪除本章資料</button></div>

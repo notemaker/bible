@@ -87,7 +87,7 @@ function logout() {
 function renderOverview(overview) {
   currentOverview = overview;
   $('#overviewContent').hidden = false;
-  $('#scriptureTitle').textContent = `${overview.book} 第 ${overview.chapter} 章`;
+  $('#scriptureTitle').textContent = '聖經內容';
   $('#scriptureSource').href = overview.sourceUrl || '#';
   $('#scriptureText').innerHTML = (overview.verses || []).map((verse) => `<p><span class="scripture-verse-number">${escapeHtml(verse.verse)}</span>${escapeHtml(verse.text)}</p>`).join('');
   $('#overviewVideoPlayer').innerHTML = renderVideo(overview.youtubeUrl, overview.youtubeTitle);
