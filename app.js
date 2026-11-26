@@ -41,13 +41,14 @@ const state = {
   latestVerses: [],
   hasCachedData: false,
   hasOlderMedia: false,
-  allMediaLoaded: false,
+  previousMedia: [],
+  previousMediaLoaded: false,
+  showPreviousWeek: false,
   modal: null,
   editingMediaId: null,
   editingTypeId: null,
   search: '',
   type: 'all',
-  showAllMedia: false,
   toastTimer: null
 };
 let latestVerseUtterance = null;
@@ -79,7 +80,9 @@ function applyLiveData(result) {
   state.latestVerses = Array.isArray(result.latestVerses) ? result.latestVerses : (result.latestVerse ? [result.latestVerse] : []);
   state.latestVerse = state.latestVerses[0] || null;
   state.todayKey = result.today || todayDateKey();
-  state.allMediaLoaded = Boolean(result.allMedia);
+  state.previousMedia = [];
+  state.previousMediaLoaded = false;
+  state.showPreviousWeek = false;
   state.hasOlderMedia = result.hasMore !== undefined ? Boolean(result.hasMore) : state.media.some((item) => !isCurrentWeekMedia(item));
 }
 
@@ -342,14 +345,14 @@ function speakSingleVerse(index, button) {
 }
 
 function renderMedia() {
-  const hasOlderMedia = state.hasOlderMedia || state.media.some((item) => !isCurrentWeekMedia(item));
+  const hasOlderMedia = state.hasOlderMedia || state.previousMedia.length > 0;
   const moreButton = $('#moreMediaButton');
   moreButton.hidden = !hasOlderMedia;
-  moreButton.textContent = state.showAllMedia ? '收起其他影片' : '更多影片';
-  state.filteredMedia = state.media.filter((item) => {
+  moreButton.textContent = state.showPreviousWeek ? '收起上一週影片' : '更多影片';
+  const sourceMedia = state.showPreviousWeek ? state.media.concat(state.previousMedia) : state.media;
+  state.filteredMedia = sourceMedia.filter((item) => {
     const inType = state.type === 'all' || item.type === state.type;
-    const inDateRange = state.showAllMedia || isCurrentWeekMedia(item);
-    return inType && inDateRange;
+    return inType;
   }).sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
   $('#collectionCount').textContent = `${state.filteredMedia.length} 部影音`;
   const grid = $('#mediaGrid');
@@ -527,22 +530,22 @@ async function loadLiveData() {
   }
 }
 
-async function loadAllMedia() {
-  if (state.allMediaLoaded) { state.showAllMedia = true; renderMedia(); return; }
+async function loadPreviousWeekMedia() {
+  if (state.previousMediaLoaded) { state.showPreviousWeek = true; renderMedia(); return; }
   const button = $('#moreMediaButton');
   button.disabled = true;
   button.textContent = '載入中…';
   try {
-    const result = await jsonp({ action: 'mediaList' }, DEFAULT_CONFIG.appsScriptUrl);
+    const result = await jsonp({ action: 'mediaList', weekOffset: 1 }, DEFAULT_CONFIG.appsScriptUrl);
     if (result?.error === '不支援的讀取操作') throw new Error('Apps Script 尚未更新到兩階段載入版本，請更新最新版 Code.gs。');
-    if (!result?.ok) throw new Error(result?.error || '更多影片讀取失敗。');
-    state.media = Array.isArray(result.media) ? result.media : state.media;
-    state.allMediaLoaded = true;
-    state.hasOlderMedia = false;
-    state.showAllMedia = true;
+    if (!result?.ok) throw new Error(result?.error || '上一週影片讀取失敗。');
+    state.previousMedia = Array.isArray(result.media) ? result.media : [];
+    state.previousMediaLoaded = true;
+    state.showPreviousWeek = true;
+    state.hasOlderMedia = state.previousMedia.length > 0;
     renderMedia();
   } catch (error) {
-    showToast(error.message || '更多影片讀取失敗。');
+    showToast(error.message || '上一週影片讀取失敗。');
     button.disabled = false;
     button.textContent = '更多影片';
   }
@@ -933,11 +936,11 @@ function wireEvents() {
   });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
   $('#moreMediaButton').addEventListener('click', () => {
-    if (!state.allMediaLoaded && !state.showAllMedia) {
-      loadAllMedia();
+    if (!state.showPreviousWeek) {
+      loadPreviousWeekMedia();
       return;
     }
-    state.showAllMedia = !state.showAllMedia;
+    state.showPreviousWeek = false;
     renderMedia();
   });
   const handleMediaGridClick = (event) => {

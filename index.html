@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css?v=20261126-2" />
-    <script src="./app.js?v=20261126-3" defer></script>
+    <script src="./app.js?v=20261126-4" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -83,12 +83,12 @@
           </div>
           <div class="collection-meta">
             <span id="collectionCount">0 部影音</span>
-            <button id="moreMediaButton" class="button button-outline" type="button" hidden>更多影片</button>
             <button id="addMediaButton" class="button button-primary admin-only" type="button" hidden>＋ 新增影音</button>
           </div>
         </section>
 
         <section id="mediaGrid" class="media-list collection-list" aria-live="polite"></section>
+        <div class="media-more-row"><button id="moreMediaButton" class="button button-outline" type="button" hidden>更多影片</button></div>
       </main>
 
       <footer class="footer">

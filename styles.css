@@ -110,6 +110,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .featured-section + .toolbar { margin-top: 24px; padding-top: 18px; border-top-color: #596d5e; }
 
 .media-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 18px 0 75px; }
+.media-more-row { display: flex; justify-content: flex-end; margin: -52px 0 34px; }
 .collection-list { grid-template-columns: 1fr; gap: 10px; }
 .collection-list .media-card { display: grid; grid-template-columns: 132px minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; column-gap: 18px; min-height: 0; padding: 14px 18px; }
 .collection-list .media-card[data-open-player] { cursor: pointer; }
