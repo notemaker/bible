@@ -41,6 +41,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .site-menu-panel { position: absolute; top: calc(100% + 8px); right: 0; display: grid; min-width: 150px; padding: 7px; border: 1px solid var(--line); background: #202520; box-shadow: var(--shadow); }
 .site-menu-panel a { display: block; padding: 10px 12px; color: var(--ink-soft); font-size: 12px; text-decoration: none; white-space: nowrap; }
 .site-menu-panel a:hover, .site-menu-panel a:focus-visible { color: var(--ink); background: var(--sage); }
+.site-menu-panel button { display: block; width: 100%; padding: 10px 12px; border: 0; color: var(--ink-soft); background: transparent; font-size: 12px; text-align: left; white-space: nowrap; }
+.site-menu-panel button:hover, .site-menu-panel button:focus-visible { color: var(--ink); background: var(--sage); }
 .status-pill { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 12px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 4px rgba(240, 217, 140, 0.28); }
 .status-pill.connected .status-dot { background: #56a57a; box-shadow: 0 0 0 4px rgba(86, 165, 122, 0.18); }
@@ -222,6 +224,23 @@ body.viewer-open { overflow: hidden; }
 .floating-player { overflow: hidden; aspect-ratio: 16 / 9; background: #000; }
 .floating-player iframe, .floating-player video { display: block; width: 100%; height: 100%; border: 0; background: #000; }
 .modal h2 { margin: 0; font-family: "Noto Serif TC", serif; font-size: 28px; letter-spacing: -0.04em; }
+.prayer-settings-stack { display: grid; gap: 17px; margin-top: 22px; }
+.prayer-toggle { display: flex; align-items: center; gap: 9px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.prayer-toggle input { width: 17px; height: 17px; accent-color: var(--action); }
+.prayer-time-row { display: flex; align-items: end; gap: 10px; }
+.prayer-time-row label { display: grid; flex: 1; gap: 7px; color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+.prayer-time-row input { min-height: 42px; padding: 0 11px; border: 1px solid var(--line); color: var(--ink); background: #191d1a; }
+.prayer-times-list { display: flex; flex-wrap: wrap; gap: 8px; min-height: 25px; }
+.prayer-time-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 8px 5px 10px; color: var(--sage-deep); background: var(--sage); font-size: 12px; }
+.prayer-time-chip button { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; color: var(--ink-soft); background: transparent; line-height: 1; }
+.prayer-time-chip button:hover { color: var(--coral); }
+.prayer-card { position: fixed; z-index: 35; right: 22px; bottom: 22px; width: min(350px, calc(100vw - 44px)); padding: 22px 24px 20px; border: 1px solid #66816f; border-left: 4px solid var(--sage-deep); color: var(--ink); background: rgba(32, 38, 34, .98); box-shadow: 0 20px 55px rgba(0, 0, 0, .45); animation: prayer-card-in 180ms ease-out; }
+.prayer-card .section-label { margin-bottom: 10px; }
+.prayer-card-text { margin: 0 22px 12px 0; color: var(--ink); font-family: "Noto Serif TC", serif; font-size: 18px; line-height: 1.75; }
+.prayer-card small { color: var(--muted); font-size: 10px; }
+.prayer-card-close { position: absolute; top: 8px; right: 10px; width: 28px; height: 28px; padding: 0; border: 0; color: var(--muted); background: transparent; font-size: 22px; line-height: 1; }
+.prayer-card-close:hover { color: var(--ink); }
+@keyframes prayer-card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .modal-intro { margin: 12px 0 24px; color: var(--ink-soft); font-size: 12px; line-height: 1.8; }
 .modal-close { position: absolute; top: 15px; right: 17px; width: 30px; height: 30px; padding: 0; border: 0; color: var(--muted); background: transparent; font-size: 25px; font-weight: 300; line-height: 1; }
 .google-sign-in { min-height: 40px; margin: 0 0 11px; }

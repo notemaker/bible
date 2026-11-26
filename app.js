@@ -19,6 +19,9 @@ const CONFIG_KEY = 'bible-truth-config';
 const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
 const LIVE_DATA_CACHE_KEY = 'bible-truth-live-data-v2';
 const LIVE_DATA_CACHE_TTL = 10 * 60 * 1000;
+const PRAYER_REMINDER_KEY = 'bible-truth-prayer-reminder-v1';
+const PRAYER_MESSAGE = '弟兄姊妹，禱告的時間到了哦...';
+const PRAYER_CARD_DURATION = 8000;
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
@@ -51,6 +54,8 @@ const state = {
 };
 let latestVerseUtterance = null;
 let latestVerseActiveButton = null;
+let prayerReminderTimer = null;
+let prayerCardTimer = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -383,6 +388,83 @@ function showToast(message) {
   toast.classList.add('show');
   clearTimeout(state.toastTimer);
   state.toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+}
+
+function loadPrayerSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRAYER_REMINDER_KEY) || 'null');
+    const times = Array.isArray(saved?.times) ? saved.times.filter((time) => /^\d{2}:\d{2}$/.test(time)).slice(0, 8) : [];
+    return { enabled: Boolean(saved?.enabled), times: [...new Set(times)].sort() };
+  } catch { return { enabled: false, times: [] }; }
+}
+
+function savePrayerSettingsValue(settings) {
+  localStorage.setItem(PRAYER_REMINDER_KEY, JSON.stringify({ enabled: Boolean(settings.enabled), times: [...new Set(settings.times || [])].sort() }));
+}
+
+function renderPrayerTimes(times = loadPrayerSettings().times) {
+  const list = $('#prayerTimesList');
+  if (!list) return;
+  list.innerHTML = times.length
+    ? times.map((time) => `<span class="prayer-time-chip"><strong>${escapeHtml(time)}</strong><button type="button" data-remove-prayer-time="${escapeHtml(time)}" aria-label="移除 ${escapeHtml(time)}">×</button></span>`).join('')
+    : '<span class="helper-text">尚未設定提醒時間。</span>';
+}
+
+function openPrayerSettings() {
+  const settings = loadPrayerSettings();
+  $('#prayerReminderEnabled').checked = settings.enabled;
+  $('#prayerTimeInput').value = settings.times[0] || '09:00';
+  renderPrayerTimes(settings.times);
+  const supported = 'Notification' in window;
+  $('#prayerPermissionMessage').textContent = supported ? '啟用後，瀏覽器會詢問是否允許顯示通知；通知採無聲方式呈現。' : '此瀏覽器不支援通知，仍可保存提醒設定，但無法顯示瀏覽器通知。';
+  openModal('prayerSettings');
+}
+
+async function savePrayerSettings() {
+  const enabled = $('#prayerReminderEnabled').checked;
+  const times = [...document.querySelectorAll('[data-remove-prayer-time]')].map((button) => button.dataset.removePrayerTime).filter(Boolean);
+  if (enabled && !times.length) { showToast('請至少加入一個提醒時間。'); return; }
+  if (enabled && 'Notification' in window && Notification.permission === 'default') {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') $('#prayerPermissionMessage').textContent = '目前未允許瀏覽器通知；請在瀏覽器網站設定中允許通知後再使用。';
+  }
+  savePrayerSettingsValue({ enabled, times });
+  closeModal();
+  startPrayerReminder();
+  showToast(enabled ? `已啟用每日禱告提醒：${times.join('、')}` : '已關閉定時禱告提醒。');
+}
+
+function showPrayerCard() {
+  const card = $('#prayerCard');
+  if (!card) return;
+  card.hidden = false;
+  clearTimeout(prayerCardTimer);
+  prayerCardTimer = setTimeout(() => { card.hidden = true; }, PRAYER_CARD_DURATION);
+}
+
+function sendPrayerNotification() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const notification = new Notification('定時禱告提醒', { body: PRAYER_MESSAGE, silent: true, requireInteraction: false, tag: 'bible-truth-prayer' });
+  notification.onclick = () => { window.focus(); showPrayerCard(); notification.close(); };
+  setTimeout(() => notification.close(), PRAYER_CARD_DURATION);
+}
+
+function checkPrayerReminder() {
+  const settings = loadPrayerSettings();
+  if (!settings.enabled || !settings.times.length) return;
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  if (!settings.times.includes(time)) return;
+  const firedKey = `${now.toISOString().slice(0, 10)}-${time}`;
+  if (localStorage.getItem(`${PRAYER_REMINDER_KEY}-last`) === firedKey) return;
+  localStorage.setItem(`${PRAYER_REMINDER_KEY}-last`, firedKey);
+  sendPrayerNotification();
+}
+
+function startPrayerReminder() {
+  clearInterval(prayerReminderTimer);
+  checkPrayerReminder();
+  prayerReminderTimer = setInterval(checkPrayerReminder, 15000);
 }
 
 function openModal(name) {
@@ -933,6 +1015,20 @@ function wireEvents() {
   $('#addTypeButton').addEventListener('click', openTypeModal);
   $('#saveSettingsButton').addEventListener('click', saveConnectionSettings);
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
+  $('#prayerSettingsButton').addEventListener('click', openPrayerSettings);
+  $('#savePrayerSettingsButton').addEventListener('click', savePrayerSettings);
+  $('#addPrayerTimeButton').addEventListener('click', () => {
+    const input = $('#prayerTimeInput');
+    if (!input.value) return;
+    const times = [...document.querySelectorAll('[data-remove-prayer-time]')].map((button) => button.dataset.removePrayerTime);
+    renderPrayerTimes([...new Set([...times, input.value])].sort());
+  });
+  $('#prayerTimesList').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-remove-prayer-time]');
+    if (!button) return;
+    button.closest('.prayer-time-chip').remove();
+  });
+  $('#prayerCardCloseButton').addEventListener('click', () => { $('#prayerCard').hidden = true; clearTimeout(prayerCardTimer); });
   $('#latestVerseList').addEventListener('click', (event) => {
     const button = event.target.closest('[data-speak-verse]');
     if (button) speakSingleVerse(button.dataset.speakVerse, button);
@@ -1005,4 +1101,5 @@ restoreAdminSession();
 loadLiveDataCache();
 wireEvents();
 render();
+startPrayerReminder();
 loadLiveData();

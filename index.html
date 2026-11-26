@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20261126-5" />
-    <script src="./app.js?v=20261126-5" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20261127-1" />
+    <script src="./app.js?v=20261127-1" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -31,6 +31,7 @@
               <a id="addVerseButton" class="admin-only" href="./verses.html" hidden>＋ 新增經節</a>
               <a id="addPhotoButton" class="admin-only" href="./photos.html?upload=1" hidden>＋ 新增照片</a>
               <a href="./bible-overview.html">聖經鳥瞰</a>
+              <button id="prayerSettingsButton" type="button">定時禱告</button>
             </div>
           </details>
           <button id="loginButton" class="button button-quiet" type="button">
@@ -161,8 +162,31 @@
         <h2 id="playerModalTitle">影片播放</h2>
         <div id="playerContent" class="floating-player"></div>
       </div>
+
+      <div id="prayerSettingsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="prayerSettingsTitle" hidden>
+        <button class="modal-close" data-close-modal aria-label="關閉">×</button>
+        <p class="eyebrow accent">PRAYER REMINDER</p>
+        <h2 id="prayerSettingsTitle">定時禱告</h2>
+        <p class="modal-intro">提醒只保存在這個瀏覽器，不會寫入 Google 試算表，也不會中斷目前正在閱讀的內容。</p>
+        <div class="prayer-settings-stack">
+          <label class="prayer-toggle"><input id="prayerReminderEnabled" type="checkbox" /> <span>啟用每日定時禱告提醒</span></label>
+          <div class="prayer-time-row">
+            <label>提醒時間<input id="prayerTimeInput" type="time" value="09:00" /></label>
+            <button id="addPrayerTimeButton" class="button button-outline" type="button">加入時間</button>
+          </div>
+          <div id="prayerTimesList" class="prayer-times-list" aria-live="polite"></div>
+          <p id="prayerPermissionMessage" class="helper-text">啟用後，瀏覽器會詢問是否允許顯示通知；通知採無聲方式呈現。</p>
+          <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button id="savePrayerSettingsButton" class="button button-primary" type="button">儲存提醒設定</button></div>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <aside id="prayerCard" class="prayer-card" hidden role="dialog" aria-live="assertive" aria-label="禱告小卡">
+      <button id="prayerCardCloseButton" class="prayer-card-close" type="button" aria-label="關閉禱告小卡">×</button>
+      <p class="section-label">現在一起禱告</p>
+      <p class="prayer-card-text">求主憐憫與恩典，興起集集鎮召會的青職弟兄姊妹。</p>
+      <small>8秒後自動關閉</small>
+    </aside>
   </body>
 </html>
