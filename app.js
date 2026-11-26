@@ -40,10 +40,8 @@ const state = {
   latestVerse: null,
   latestVerses: [],
   hasCachedData: false,
-  hasOlderMedia: false,
-  previousMedia: [],
-  previousMediaLoaded: false,
-  showPreviousWeek: false,
+  mediaRange: 'week',
+  mediaRanges: {},
   modal: null,
   editingMediaId: null,
   editingTypeId: null,
@@ -80,10 +78,8 @@ function applyLiveData(result) {
   state.latestVerses = Array.isArray(result.latestVerses) ? result.latestVerses : (result.latestVerse ? [result.latestVerse] : []);
   state.latestVerse = state.latestVerses[0] || null;
   state.todayKey = result.today || todayDateKey();
-  state.previousMedia = [];
-  state.previousMediaLoaded = false;
-  state.showPreviousWeek = false;
-  state.hasOlderMedia = result.hasMore !== undefined ? Boolean(result.hasMore) : state.media.some((item) => !isCurrentWeekMedia(item));
+  state.mediaRange = 'week';
+  state.mediaRanges = { week: state.media };
 }
 
 function saveLiveDataCache(result) {
@@ -345,19 +341,21 @@ function speakSingleVerse(index, button) {
 }
 
 function renderMedia() {
-  const hasOlderMedia = state.hasOlderMedia || state.previousMedia.length > 0;
-  const moreButton = $('#moreMediaButton');
-  moreButton.hidden = !hasOlderMedia;
-  moreButton.textContent = state.showPreviousWeek ? '收起上一週影片' : '更多影片';
-  const sourceMedia = state.showPreviousWeek ? state.media.concat(state.previousMedia) : state.media;
-  state.filteredMedia = sourceMedia.filter((item) => {
+  $$('.media-range-button').forEach((button) => {
+    const active = button.dataset.mediaRange === state.mediaRange;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+    button.disabled = Boolean(state.loadingMediaRange);
+  });
+  state.filteredMedia = state.media.filter((item) => {
     const inType = state.type === 'all' || item.type === state.type;
     return inType;
   }).sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
   $('#collectionCount').textContent = `${state.filteredMedia.length} 部影音`;
   const grid = $('#mediaGrid');
   if (!state.filteredMedia.length) {
-    grid.innerHTML = `<div class="empty-state"><strong>本週還沒有符合條件的影音</strong><span>${state.media.length ? '按「更多影片」可以查看其他日期的影音。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
+    const rangeLabel = state.mediaRange === 'month' ? '本月' : state.mediaRange === 'all' ? '目前' : '本週';
+    grid.innerHTML = `<div class="empty-state"><strong>${rangeLabel}還沒有符合條件的影音</strong><span>${state.media.length ? '請改選其他影片範圍或影音類型。' : '管理者登入後，可以把第一段影音收進來。'}</span></div>`;
     return;
   }
   grid.innerHTML = state.filteredMedia.map((item) => renderMediaCard(item)).join('');
@@ -530,24 +528,29 @@ async function loadLiveData() {
   }
 }
 
-async function loadPreviousWeekMedia() {
-  if (state.previousMediaLoaded) { state.showPreviousWeek = true; renderMedia(); return; }
-  const button = $('#moreMediaButton');
-  button.disabled = true;
-  button.textContent = '載入中…';
+async function loadMediaRange(range) {
+  if (range === state.mediaRange) return;
+  if (state.mediaRanges[range]) {
+    state.mediaRange = range;
+    state.media = state.mediaRanges[range];
+    renderMedia();
+    return;
+  }
+  state.loadingMediaRange = true;
+  renderMedia();
   try {
-    const result = await jsonp({ action: 'mediaList', weekOffset: 1 }, DEFAULT_CONFIG.appsScriptUrl);
-    if (result?.error === '不支援的讀取操作') throw new Error('Apps Script 尚未更新到兩階段載入版本，請更新最新版 Code.gs。');
-    if (!result?.ok) throw new Error(result?.error || '上一週影片讀取失敗。');
-    state.previousMedia = Array.isArray(result.media) ? result.media : [];
-    state.previousMediaLoaded = true;
-    state.showPreviousWeek = true;
-    state.hasOlderMedia = state.previousMedia.length > 0;
+    const result = await jsonp({ action: 'mediaList', range }, DEFAULT_CONFIG.appsScriptUrl);
+    if (result?.error === '不支援的讀取操作') throw new Error('Apps Script 尚未更新到影片範圍版本，請更新最新版 Code.gs。');
+    if (!result?.ok) throw new Error(result?.error || '影片清單讀取失敗。');
+    state.mediaRanges[range] = Array.isArray(result.media) ? result.media : [];
+    state.mediaRange = range;
+    state.media = state.mediaRanges[range];
     renderMedia();
   } catch (error) {
-    showToast(error.message || '上一週影片讀取失敗。');
-    button.disabled = false;
-    button.textContent = '更多影片';
+    showToast(error.message || '影片清單讀取失敗。');
+  } finally {
+    state.loadingMediaRange = false;
+    renderMedia();
   }
 }
 
@@ -935,14 +938,7 @@ function wireEvents() {
     if (button) speakSingleVerse(button.dataset.speakVerse, button);
   });
   $('#typeFilter').addEventListener('change', (event) => { state.type = event.target.value; renderMedia(); });
-  $('#moreMediaButton').addEventListener('click', () => {
-    if (!state.showPreviousWeek) {
-      loadPreviousWeekMedia();
-      return;
-    }
-    state.showPreviousWeek = false;
-    renderMedia();
-  });
+  $$('.media-range-button').forEach((button) => button.addEventListener('click', () => loadMediaRange(button.dataset.mediaRange)));
   const handleMediaGridClick = (event) => {
     const playButton = event.target.closest('[data-play-media]');
     if (playButton) {
