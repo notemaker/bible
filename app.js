@@ -21,7 +21,7 @@ const LIVE_DATA_CACHE_KEY = 'bible-truth-live-data-v2';
 const LIVE_DATA_CACHE_TTL = 10 * 60 * 1000;
 const PRAYER_REMINDER_KEY = 'bible-truth-prayer-reminder-v1';
 const PRAYER_MESSAGE = '弟兄姊妹，禱告的時間到了哦...';
-const PRAYER_CARD_DURATION = 8000;
+const PRAYER_CARD_DURATION = 20000;
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
@@ -444,9 +444,8 @@ function showPrayerCard() {
 
 function sendPrayerNotification() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const notification = new Notification('定時禱告提醒', { body: PRAYER_MESSAGE, silent: true, requireInteraction: false, tag: 'bible-truth-prayer' });
+  const notification = new Notification('定時禱告提醒', { body: PRAYER_MESSAGE, silent: true, requireInteraction: true, tag: 'bible-truth-prayer' });
   notification.onclick = () => { window.focus(); showPrayerCard(); notification.close(); };
-  setTimeout(() => notification.close(), PRAYER_CARD_DURATION);
 }
 
 function checkPrayerReminder() {
