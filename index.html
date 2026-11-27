@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20261127-1" />
-    <script src="./app.js?v=20261127-1" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20261127-2" />
+    <script src="./app.js?v=20261127-2" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -31,7 +31,7 @@
               <a id="addVerseButton" class="admin-only" href="./verses.html" hidden>＋ 新增經節</a>
               <a id="addPhotoButton" class="admin-only" href="./photos.html?upload=1" hidden>＋ 新增照片</a>
               <a href="./bible-overview.html">聖經鳥瞰</a>
-              <button id="prayerSettingsButton" type="button">定時禱告</button>
+              <button id="prayerSettingsButton" type="button" aria-label="直接開啟禱告小卡">定時禱告</button>
             </div>
           </details>
           <button id="loginButton" class="button button-quiet" type="button">
@@ -53,7 +53,7 @@
         </div>
 
         <section id="latestVerseSection" class="latest-verse-section" aria-labelledby="latestVerseTitle" hidden>
-          <div class="latest-verse-heading"><span class="section-label">恢復本聖經</span><h2 id="latestVerseTitle">今日經節</h2></div>
+          <div class="latest-verse-heading"><div><span class="section-label">恢復本聖經</span><h2 id="latestVerseTitle">今日經節</h2></div><div class="latest-verse-font-controls" aria-label="今日經節字體大小"><button id="latestVerseFontSmaller" class="button button-outline" type="button" aria-label="縮小今日經節字體">縮小</button><button id="latestVerseFontLarger" class="button button-outline" type="button" aria-label="放大今日經節字體">放大</button></div></div>
           <ol id="latestVerseList" class="latest-verse-list"></ol>
           <div class="latest-verse-meta"><span>最近新增的 1 至 3 處經節</span></div>
         </section>
@@ -167,7 +167,7 @@
         <button class="modal-close" data-close-modal aria-label="關閉">×</button>
         <p class="eyebrow accent">PRAYER REMINDER</p>
         <h2 id="prayerSettingsTitle">定時禱告</h2>
-        <p class="modal-intro">提醒只保存在這個瀏覽器，不會寫入 Google 試算表，也不會中斷目前正在閱讀的內容。</p>
+        <p class="modal-intro">提醒只保存在這個瀏覽器，不會寫入 Google 試算表，也不會發送瀏覽器通知；到達時間後，網站內會顯示禱告小卡。</p>
         <div class="prayer-settings-stack">
           <label class="prayer-toggle"><input id="prayerReminderEnabled" type="checkbox" /> <span>啟用每日定時禱告提醒</span></label>
           <div class="prayer-time-row">
@@ -175,7 +175,7 @@
             <button id="addPrayerTimeButton" class="button button-outline" type="button">加入時間</button>
           </div>
           <div id="prayerTimesList" class="prayer-times-list" aria-live="polite"></div>
-          <p id="prayerPermissionMessage" class="helper-text">啟用後，瀏覽器會詢問是否允許顯示通知；通知採無聲方式呈現。</p>
+          <p id="prayerPermissionMessage" class="helper-text">到達設定時間後，網站內會顯示禱告小卡；小卡會一直保留，直到按下關閉。</p>
           <div class="form-actions"><button class="button button-outline" data-close-modal type="button">取消</button><button id="savePrayerSettingsButton" class="button button-primary" type="button">儲存提醒設定</button></div>
         </div>
       </div>
@@ -186,7 +186,7 @@
       <button id="prayerCardCloseButton" class="prayer-card-close" type="button" aria-label="關閉禱告小卡">×</button>
       <p class="section-label">現在一起禱告</p>
       <p class="prayer-card-text">求主憐憫與恩典，興起集集鎮召會的青職弟兄姊妹。</p>
-      <small>20秒後自動關閉</small>
+      <small>請按右上角關閉</small>
     </aside>
   </body>
 </html>

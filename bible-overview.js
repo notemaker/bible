@@ -2,6 +2,7 @@ const OVERVIEW_CONFIG = {
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbywV6iqZ3yV5qlmpejFtsy6QmhdABj4yqLIqIf4LQyI-6knsrmPjOa5wNJYbf1Zg7Th0A/exec'
 };
 const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
+const OVERVIEW_FONT_SCALE_KEY = 'bible-truth-overview-font-scale-v1';
 const BOOKS = [
   ['創世記', 1], ['出埃及記', 2], ['利未記', 3], ['民數記', 4], ['申命記', 5], ['約書亞記', 6], ['士師記', 7], ['路得記', 8], ['撒母耳記上', 9], ['撒母耳記下', 10], ['列王紀上', 11], ['列王紀下', 12], ['歷代志上', 13], ['歷代志下', 14], ['以斯拉記', 15], ['尼希米記', 16], ['以斯帖記', 17], ['約伯記', 18], ['詩篇', 19], ['箴言', 20], ['傳道書', 21], ['雅歌', 22], ['以賽亞書', 23], ['耶利米書', 24], ['耶利米哀歌', 25], ['以西結書', 26], ['但以理書', 27], ['何西阿書', 28], ['約珥書', 29], ['阿摩司書', 30], ['俄巴底亞書', 31], ['約拿書', 32], ['彌迦書', 33], ['那鴻書', 34], ['哈巴谷書', 35], ['西番雅書', 36], ['哈該書', 37], ['撒迦利亞書', 38], ['瑪拉基書', 39], ['馬太福音', 40], ['馬可福音', 41], ['路加福音', 42], ['約翰福音', 43], ['使徒行傳', 44], ['羅馬書', 45], ['哥林多前書', 46], ['哥林多後書', 47], ['加拉太書', 48], ['以弗所書', 49], ['腓立比書', 50], ['歌羅西書', 51], ['帖撒羅尼迦前書', 52], ['帖撒羅尼迦後書', 53], ['提摩太前書', 54], ['提摩太後書', 55], ['提多書', 56], ['腓立門書', 57], ['希伯來書', 58], ['雅各書', 59], ['彼得前書', 60], ['彼得後書', 61], ['約翰一書', 62], ['約翰二書', 63], ['約翰三書', 64], ['猶大書', 65], ['啟示錄', 66]
 ];
@@ -10,11 +11,24 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 let session = null;
 let currentOverview = null;
 let videoInfo = { title: '', videoId: '' };
+let overviewFontScales = loadOverviewFontScales();
 
 function escapeHtml(value = '') { return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char])); }
 function loadSession() { try { return JSON.parse(sessionStorage.getItem(ADMIN_SESSION_KEY) || 'null'); } catch { return null; } }
 function setMessage(message, success = false) { const node = $('#overviewMessage'); node.textContent = message; node.style.color = success ? 'var(--sage-deep)' : 'var(--coral)'; }
 function showToast(message) { const node = $('#overviewToast'); node.textContent = message; node.classList.add('show'); setTimeout(() => node.classList.remove('show'), 3600); }
+function loadOverviewFontScales() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OVERVIEW_FONT_SCALE_KEY) || '{}');
+    return { scripture: clampOverviewFontScale(saved.scripture), truth: clampOverviewFontScale(saved.truth) };
+  } catch { return { scripture: 1, truth: 1 }; }
+}
+function clampOverviewFontScale(value) { const number = Number(value); return Number.isFinite(number) ? Math.min(1.5, Math.max(0.85, number)) : 1; }
+function changeOverviewFontScale(section, delta) {
+  overviewFontScales[section] = clampOverviewFontScale(Number((overviewFontScales[section] + delta).toFixed(2)));
+  localStorage.setItem(OVERVIEW_FONT_SCALE_KEY, JSON.stringify(overviewFontScales));
+  $('#overviewContent').style.setProperty(`--overview-${section}-font-scale`, overviewFontScales[section]);
+}
 function jsonp(params) {
   return new Promise((resolve, reject) => {
     const callback = `__bibleOverview_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -87,6 +101,8 @@ function logout() {
 function renderOverview(overview) {
   currentOverview = overview;
   $('#overviewContent').hidden = false;
+  $('#overviewContent').style.setProperty('--overview-scripture-font-scale', overviewFontScales.scripture);
+  $('#overviewContent').style.setProperty('--overview-truth-font-scale', overviewFontScales.truth);
   $('#scriptureTitle').textContent = '聖經內容';
   $('#scriptureSource').href = overview.sourceUrl || '#';
   $('#scriptureText').innerHTML = (overview.verses || []).map((verse) => `<p><span class="scripture-verse-number">${escapeHtml(verse.verse)}</span>${escapeHtml(verse.text)}</p>`).join('');
@@ -164,6 +180,10 @@ function init() {
     $('#overviewQueryForm').requestSubmit();
   });
   $('#overviewVideoInfoButton').addEventListener('click', loadVideoInfo);
+  $('#scriptureFontSmaller').addEventListener('click', () => changeOverviewFontScale('scripture', -0.1));
+  $('#scriptureFontLarger').addEventListener('click', () => changeOverviewFontScale('scripture', 0.1));
+  $('#truthPointsFontSmaller').addEventListener('click', () => changeOverviewFontScale('truth', -0.1));
+  $('#truthPointsFontLarger').addEventListener('click', () => changeOverviewFontScale('truth', 0.1));
   $('#overviewSaveButton').addEventListener('click', saveOverview);
   $('#overviewDeleteButton').addEventListener('click', deleteOverview);
   $('#logoutButton').addEventListener('click', logout);

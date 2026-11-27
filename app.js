@@ -20,8 +20,7 @@ const ADMIN_SESSION_KEY = 'bible-truth-admin-session';
 const LIVE_DATA_CACHE_KEY = 'bible-truth-live-data-v2';
 const LIVE_DATA_CACHE_TTL = 10 * 60 * 1000;
 const PRAYER_REMINDER_KEY = 'bible-truth-prayer-reminder-v1';
-const PRAYER_MESSAGE = '弟兄姊妹，禱告的時間到了哦...';
-const PRAYER_CARD_DURATION = 20000;
+const LATEST_VERSE_FONT_SCALE_KEY = 'bible-truth-latest-verse-font-scale-v1';
 const LEGACY_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycby7SL4pFi-SSnR2_i58V9tfBI6T1_K4bGIzpAq457UdbL_wu4cBjzqFs4LMzh-TUkmRyg/exec',
   'https://script.google.com/macros/s/AKfycbwb-JHphis9OXKiSVzK-Eo7wsveS0ZiOfsHF0Y6uP-RYtGyyEquEJm_4UzI2ED0YMIO2Q/exec'
@@ -56,6 +55,7 @@ let latestVerseUtterance = null;
 let latestVerseActiveButton = null;
 let prayerReminderTimer = null;
 let prayerCardTimer = null;
+let latestVerseFontScale = loadLatestVerseFontScale();
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -75,6 +75,17 @@ function saveConfig() {
     appsScriptUrl: (state.config.appsScriptUrl || '').trim(),
     googleClientId: (state.config.googleClientId || '').trim()
   }));
+}
+
+function loadLatestVerseFontScale() {
+  const value = Number(localStorage.getItem(LATEST_VERSE_FONT_SCALE_KEY));
+  return Number.isFinite(value) ? Math.min(1.4, Math.max(0.85, value)) : 1;
+}
+
+function changeLatestVerseFontScale(delta) {
+  latestVerseFontScale = Math.min(1.4, Math.max(0.85, Number((latestVerseFontScale + delta).toFixed(2))));
+  localStorage.setItem(LATEST_VERSE_FONT_SCALE_KEY, String(latestVerseFontScale));
+  renderLatestVerse();
 }
 
 function applyLiveData(result) {
@@ -304,7 +315,9 @@ function renderFeaturedMedia() {
 
 function renderLatestVerse() {
   const verses = state.latestVerses.filter((verse) => verse && verse.text).slice(0, 3);
-  $('#latestVerseSection').hidden = !verses.length;
+  const section = $('#latestVerseSection');
+  section.hidden = !verses.length;
+  section.style.setProperty('--latest-verse-font-scale', latestVerseFontScale);
   $('#latestVerseList').innerHTML = verses.map((verse, index) => `<li><div class="latest-verse-reference">${escapeHtml(verse.reference || `${verse.book} ${verse.chapter}:${verse.verse}`)}</div><div class="latest-verse-text">${escapeHtml(verse.text)}</div><div class="latest-verse-links">${isHttpsUrl(verse.sourceUrl) ? `<a class="latest-verse-source" href="${escapeHtml(verse.sourceUrl)}" target="_blank" rel="noopener noreferrer">官方經文來源</a>` : ''}<button class="button button-outline latest-verse-speak" type="button" data-speak-verse="${index}" aria-label="播放${escapeHtml(verse.reference || '這處經節')}">播放</button></div></li>`).join('');
 }
 
@@ -415,8 +428,7 @@ function openPrayerSettings() {
   $('#prayerReminderEnabled').checked = settings.enabled;
   $('#prayerTimeInput').value = settings.times[0] || '09:00';
   renderPrayerTimes(settings.times);
-  const supported = 'Notification' in window;
-  $('#prayerPermissionMessage').textContent = supported ? '啟用後，瀏覽器會詢問是否允許顯示通知；通知採無聲方式呈現。' : '此瀏覽器不支援通知，仍可保存提醒設定，但無法顯示瀏覽器通知。';
+  $('#prayerPermissionMessage').textContent = '到達設定時間後，網站內會顯示禱告小卡；小卡會一直保留，直到按下關閉。';
   openModal('prayerSettings');
 }
 
@@ -424,10 +436,6 @@ async function savePrayerSettings() {
   const enabled = $('#prayerReminderEnabled').checked;
   const times = [...document.querySelectorAll('[data-remove-prayer-time]')].map((button) => button.dataset.removePrayerTime).filter(Boolean);
   if (enabled && !times.length) { showToast('請至少加入一個提醒時間。'); return; }
-  if (enabled && 'Notification' in window && Notification.permission === 'default') {
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') $('#prayerPermissionMessage').textContent = '目前未允許瀏覽器通知；請在瀏覽器網站設定中允許通知後再使用。';
-  }
   savePrayerSettingsValue({ enabled, times });
   closeModal();
   startPrayerReminder();
@@ -438,14 +446,10 @@ function showPrayerCard() {
   const card = $('#prayerCard');
   if (!card) return;
   card.hidden = false;
-  clearTimeout(prayerCardTimer);
-  prayerCardTimer = setTimeout(() => { card.hidden = true; }, PRAYER_CARD_DURATION);
 }
 
 function sendPrayerNotification() {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const notification = new Notification('定時禱告提醒', { body: PRAYER_MESSAGE, silent: true, requireInteraction: true, tag: 'bible-truth-prayer' });
-  notification.onclick = () => { window.focus(); showPrayerCard(); notification.close(); };
+  showPrayerCard();
 }
 
 function checkPrayerReminder() {
@@ -1014,7 +1018,12 @@ function wireEvents() {
   $('#addTypeButton').addEventListener('click', openTypeModal);
   $('#saveSettingsButton').addEventListener('click', saveConnectionSettings);
   $('#demoAdminButton').addEventListener('click', enterDemoAdmin);
-  $('#prayerSettingsButton').addEventListener('click', openPrayerSettings);
+  $('#latestVerseFontSmaller').addEventListener('click', () => changeLatestVerseFontScale(-0.1));
+  $('#latestVerseFontLarger').addEventListener('click', () => changeLatestVerseFontScale(0.1));
+  $('#prayerSettingsButton').addEventListener('click', () => {
+    showPrayerCard();
+    document.querySelector('.site-menu')?.removeAttribute('open');
+  });
   $('#savePrayerSettingsButton').addEventListener('click', savePrayerSettings);
   $('#addPrayerTimeButton').addEventListener('click', () => {
     const input = $('#prayerTimeInput');
@@ -1100,5 +1109,4 @@ restoreAdminSession();
 loadLiveDataCache();
 wireEvents();
 render();
-startPrayerReminder();
 loadLiveData();
